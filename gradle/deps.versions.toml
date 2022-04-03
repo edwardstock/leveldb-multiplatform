@@ -1,0 +1,57 @@
+[versions]
+minSdk = "21"
+maxSdk = "31"
+buildTools = "31.0.0"
+ndkVersion = "21.1.6352462"
+cmakeVersion = "3.18.1"
+agp = "7.1.2"
+
+android-core = "1.7.0"
+android-test = "1.4.0"
+android-appcompat = "1.4.0"
+android-lifecycle-base = "2.4.0"
+android-arch-base = "2.1.0"
+
+android-recyclerview = "1.2.1"
+android-material = "1.4.0"
+
+kotlin-coroutines = "1.6.0"
+kotlin-base = "1.6.10"
+hilt-base = "2.40.4"
+
+javaVersion = "1.8"
+
+[libraries]
+base-javax-annotations-jsr250 = { module = "javax.annotation:jsr250-api", version = "1.0" }
+base-javax-annotations-jsr330 = { module = "javax.inject:jsr330-api", version = "0.9" }
+
+base-kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version.ref = "kotlin-coroutines" }
+base-kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-base" }
+base-android-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+base-android-core = { module = "androidx.core:core-ktx", version.ref = "android-core" }
+base-android-annotations = { module = "androidx.annotation:annotation", version = "1.3.0" }
+
+base-android-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "android-appcompat" }
+base-android-appcompatResources = { module = "androidx.appcompat:appcompat-resources", version.ref = "android-appcompat" }
+base-android-ktx-activity = { module = "androidx.activity:activity-ktx", version.ref = "android-appcompat" }
+base-android-ktx-fragment = { module = "androidx.fragment:fragment-ktx", version.ref = "android-appcompat" }
+
+base-android-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "android-recyclerview" }
+base-android-material = { module = "com.google.android.material:material", version.ref = "android-material" }
+base-android-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "android-lifecycle-base" }
+base-android-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "android-lifecycle-base" }
+base-android-lifecycle-compiler = { module = "androidx.lifecycle:lifecycle-compiler", version.ref = "android-lifecycle-base" }
+
+base-hilt-gradle = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt-base" }
+base-hilt-core = { module = "com.google.dagger:hilt-android", version.ref = "hilt-base" }
+base-hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt-base" }
+
+test-core = { module = "androidx.test:core", version.ref = "android-test" }
+test-truth = { module = "androidx.test:truth", version.ref = "android-test" }
+test-monitor = { module = "androidx.test:monitor", version.ref = "android-test" }
+test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "android-test" }
+test-runner = { module = "androidx.test:runner", version.ref = "android-test" }
+test-rules = { module = "androidx.test:rules", version.ref = "android-test" }
+test-services = { module = "androidx.test:services", version.ref = "android-test" }
+test-junit = { module = "androidx.test.ext:junit-ktx", version = "1.1.3" }
+test-espresso = { module = "androidx.test.espresso:espresso", version = "3.4.0" }

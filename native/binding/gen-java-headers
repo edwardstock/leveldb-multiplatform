@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+set -x
+
+JNI_PREBUILD_DIR=${PWD}
+JAVA_SOURCES_DIR=$JNI_PREBUILD_DIR/../java
+
+mkdir -p ${JAVA_SOURCES_DIR}
+
+NATIVE_SOURCES='com.github.hf.leveldb.implementation.NativeLevelDB com.github.hf.leveldb.implementation.NativeWriteBatch com.github.hf.leveldb.implementation.NativeIterator'
+
+JAVAH_BIN=$(which javah | tr -d "\n")
+${JAVAH_BIN} -d $JNI_PREBUILD_DIR -classpath $JAVA_SOURCES_DIR $NATIVE_SOURCES

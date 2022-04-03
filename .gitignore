@@ -1,0 +1,11 @@
+.gradle
+build
+local.properties
+
+*.iml
+
+leveldb/.cxx
+.idea
+.cxx
+.extNativeBuild
+cmake-build*
