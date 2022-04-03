@@ -1,4 +1,8 @@
-# Release notes (stacked)
+# Release notes
+## 1.0.0
+
+
+# Old release notes (stacked)
 
 ## 2.1.0
 

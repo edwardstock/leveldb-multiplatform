@@ -4,6 +4,7 @@ import com.edwardstock.leveldb.Bytes.lexicographicCompare
 import com.edwardstock.leveldb.implementation.mock.MockLevelDB
 import junit.framework.TestCase
 import org.junit.Test
+import kotlin.experimental.and
 
 /*
  * Stojan Dimitrovski

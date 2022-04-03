@@ -2,6 +2,8 @@
 [![Kotlin Release](https://img.shields.io/maven-central/v/com.edwardstock/leveldb-kt?style=flat-square)]
 
 # LevelDB for Android and Kotlin
+This Repository based on https://github.com/hf/leveldb-android.
+
 
 This is a Java wrapper for the amazing
 [LevelDB](https://github.com/google/leveldb) by Google.

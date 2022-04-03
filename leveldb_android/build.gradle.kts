@@ -147,7 +147,7 @@ publishing {
                 }
                 licenses {
                     license {
-                        name.set("The MIT License")
+                        name.set("BSD license")
                         url.set("https://github.com/edwardstock/leveldb-multiplatform/blob/master/LICENSE")
                         distribution.set("repo")
                     }
@@ -157,8 +157,13 @@ publishing {
                         id.set("edwardstock")
                         name.set("Eduard Maximovich")
                         email.set("edward.vstock@gmail.com")
-                        roles.add("owner")
+                        roles.add("forker")
                         timezone.set("Europe/Moscow")
+                    }
+                    developer {
+                        id.set("hf")
+                        name.set("Stojan Dimitrovski")
+                        roles.add("owner")
                     }
                 }
             }

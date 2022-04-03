@@ -14,6 +14,15 @@ version = rootProject.version
 
 val localProps = gradleLocalProperties(rootDir)
 
+sourceSets {
+    getByName("main") {
+        java.srcDir("src/main/java")
+    }
+    getByName("test") {
+        java.srcDir("src/test/java")
+    }
+}
+
 cmakeBuild {
     path = rootProject.file("native")
 
@@ -96,7 +105,7 @@ publishing {
                 }
                 licenses {
                     license {
-                        name.set("The MIT License")
+                        name.set("BSD license")
                         url.set("https://github.com/edwardstock/leveldb-multiplatform/blob/master/LICENSE")
                         distribution.set("repo")
                     }
@@ -106,8 +115,13 @@ publishing {
                         id.set("edwardstock")
                         name.set("Eduard Maximovich")
                         email.set("edward.vstock@gmail.com")
-                        roles.add("owner")
+                        roles.add("forker")
                         timezone.set("Europe/Moscow")
+                    }
+                    developer {
+                        id.set("hf")
+                        name.set("Stojan Dimitrovski")
+                        roles.add("owner")
                     }
                 }
             }
