@@ -1,7 +1,13 @@
 package com.edwrdstock.leveldb.nat
 
 import com.edwardstock.leveldb.LevelDB
+import com.edwardstock.leveldb.WriteBatch
+import com.edwardstock.leveldb.implementation.SimpleWriteBatch
+import com.edwardstock.leveldb.implementation.forEachAll
+import com.edwardstock.leveldb.implementation.forEachKeys
+import com.edwardstock.leveldb.implementation.forEachValues
 import com.edwrdstock.leveldb.common.IterationTest
+import org.junit.Test
 
 /*
  * Stojan Dimitrovski
@@ -41,5 +47,42 @@ class NativeIterationTest : IterationTest() {
     @Throws(Exception::class)
     override fun obtainLevelDB(): LevelDB {
         return db
+    }
+
+    @Test
+    fun testBenchmark() {
+        val db = obtainLevelDB()
+
+        val batch = SimpleWriteBatch(db)
+        var startTime = System.currentTimeMillis()
+        for(i in 0..10000) {
+            batch.put("key$i", "value$i")
+        }
+        batch.commit(true)
+        val endTimeWriteBatch = System.currentTimeMillis() - startTime
+        println("write batch time: " + (endTimeWriteBatch / 1000.0))
+
+
+        startTime = System.currentTimeMillis()
+        db.forEachAll { key, value ->
+            key
+            value
+        }
+        val endTimeIterateAll = System.currentTimeMillis() - startTime
+        println("iterate all time: " + (endTimeIterateAll / 1000.0))
+
+        startTime = System.currentTimeMillis()
+        db.forEachKeys { key ->
+            key
+        }
+        val endTimeIterateKeys = System.currentTimeMillis() - startTime
+        println("iterate keys time: " + (endTimeIterateKeys / 1000.0))
+
+        startTime = System.currentTimeMillis()
+        db.forEachValues { value ->
+            value
+        }
+        val endTimeIterateValues = System.currentTimeMillis() - startTime
+        println("iterate values time: " + (endTimeIterateValues / 1000.0))
     }
 }

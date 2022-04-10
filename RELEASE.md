@@ -1,7 +1,10 @@
 # Release notes
+## 1.0.1
+
+- Added `forEachKeys` and `forEachValues` extensions to `LevelDB` 
+
 ## 1.0.0
-
-
+ - Initial release after refactoring
 # Old release notes (stacked)
 
 ## 2.1.0

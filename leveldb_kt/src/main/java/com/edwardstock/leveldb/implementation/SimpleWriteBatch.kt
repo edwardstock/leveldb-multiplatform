@@ -97,7 +97,7 @@ class SimpleWriteBatch(db: LevelDB) : WriteBatch {
      */
     fun put(key: String, value: String?): SimpleWriteBatch {
         return value?.let {
-            put(key, it)
+            put(key.toByteArray(Charsets.UTF_8), it.toByteArray())
         } ?: del(key)
     }
 
