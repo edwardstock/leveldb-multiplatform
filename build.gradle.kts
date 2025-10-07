@@ -29,8 +29,8 @@ allprojects {
 }
 
 tasks.withType(Delete::class.java) {
-    delete(rootProject.buildDir)
+    delete(layout.buildDirectory)
 }
 
 group = "com.edwardstock"
-version = "1.0.1"
+version = "1.0.2"

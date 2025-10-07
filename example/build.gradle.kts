@@ -9,10 +9,12 @@ group = rootProject.group
 version = rootProject.version
 
 android {
+    namespace = "com.edwardstock.leveldb.example"
     buildToolsVersion = deps.versions.buildTools.get()
     compileSdk = deps.versions.maxSdk.get().toInt()
 
     defaultConfig {
+        applicationId = "com.edwardstock.leveldb.example"
         minSdk = deps.versions.minSdk.get().toInt()
         targetSdk = deps.versions.maxSdk.get().toInt()
         versionCode = 1
@@ -25,8 +27,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     buildTypes {

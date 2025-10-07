@@ -1,23 +1,23 @@
 [versions]
 minSdk = "21"
-maxSdk = "31"
-buildTools = "31.0.0"
-ndkVersion = "21.1.6352462"
-cmakeVersion = "3.18.1"
-agp = "7.1.2"
+maxSdk = "36"
+buildTools = "36.0.0"
+ndkVersion = "29.0.14206865"
+cmakeVersion = "4.1.1"
+agp = "8.13.0"
 
-android-core = "1.7.0"
-android-test = "1.4.0"
-android-appcompat = "1.4.0"
-android-lifecycle-base = "2.4.0"
+android-core = "1.17.0"
+android-test = "1.7.0"
+android-appcompat = "1.7.1"
+android-lifecycle-base = "2.9.4"
 android-arch-base = "2.1.0"
 
-android-recyclerview = "1.2.1"
-android-material = "1.4.0"
+android-recyclerview = "1.4.0"
+android-material = "1.13.0"
 
-kotlin-coroutines = "1.6.0"
-kotlin-base = "1.6.10"
-hilt-base = "2.40.4"
+kotlin-coroutines = "1.10.2"
+kotlin-base = "2.2.20"
+hilt-base = "2.57.2"
 
 javaVersion = "1.8"
 

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 /*
  * Stojan Dimitrovski
  *
@@ -44,16 +46,18 @@ group = rootProject.group
 version = rootProject.version
 
 android {
+    namespace = "com.edwardstock.leveldb"
     buildToolsVersion = deps.versions.buildTools.get()
     compileSdk = deps.versions.maxSdk.get().toInt()
 
+    ndkVersion = deps.versions.ndkVersion.get()
+
     defaultConfig {
         minSdk = deps.versions.minSdk.get().toInt()
-        targetSdk = deps.versions.maxSdk.get().toInt()
 
         externalNativeBuild {
             cmake {
-                cppFlags += "-std=c++14"
+                cppFlags += "-std=c++17"
                 this.arguments
             }
         }
@@ -69,11 +73,13 @@ android {
         }
     }
 
-    kotlinOptions {
-        jvmTarget = "1.8"
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     testOptions {
+        targetSdk = deps.versions.maxSdk.get().toInt()
         animationsDisabled = true
         unitTests.all {
             it.useJUnitPlatform()
@@ -83,7 +89,7 @@ android {
     externalNativeBuild {
         cmake {
             path("${rootProject.projectDir}/native/CMakeLists.txt")
-            version = "3.18.1"
+            version = deps.versions.cmakeVersion.get()
         }
     }
 
@@ -109,6 +115,12 @@ android {
             withSourcesJar()
             withJavadocJar()
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 

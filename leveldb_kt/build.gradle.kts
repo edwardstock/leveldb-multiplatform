@@ -1,5 +1,5 @@
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     `java-library`
@@ -12,7 +12,7 @@ plugins {
 group = rootProject.group
 version = rootProject.version
 
-val localProps = gradleLocalProperties(rootDir)
+val localProps = gradleLocalProperties(rootDir, providers)
 
 sourceSets {
     getByName("main") {
@@ -45,9 +45,9 @@ tasks.register<Jar>("javadocJar") {
     group = "publishing"
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "1.8"
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 
