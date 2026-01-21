@@ -1,256 +1,166 @@
-[![Android Release](https://img.shields.io/maven-central/v/com.edwardstock/leveldb-android?style=flat-square)]\
-[![Kotlin Release](https://img.shields.io/maven-central/v/com.edwardstock/leveldb-kt?style=flat-square)]
+# LevelDB Multiplatform
 
-# LevelDB for Android and Kotlin
-This Repository based on https://github.com/hf/leveldb-android.
+[![CI](https://github.com/edwardstock/leveldb-multiplatform/actions/workflows/ci.yml/badge.svg)](https://github.com/edwardstock/leveldb-multiplatform/actions/workflows/ci.yml)
+[![Publish](https://github.com/edwardstock/leveldb-multiplatform/actions/workflows/publish.yml/badge.svg)](https://github.com/edwardstock/leveldb-multiplatform/actions/workflows/publish.yml)
+[![Latest release](https://img.shields.io/github/v/release/edwardstock/leveldb-multiplatform)](https://github.com/edwardstock/leveldb-multiplatform/releases/latest)
 
+Kotlin Multiplatform bindings for LevelDB with JNI (JVM/Android) and Kotlin/Native for desktop and iOS.
+Forked from https://github.com/hf/leveldb-android.
 
-This is a Java wrapper for the amazing
-[LevelDB](https://github.com/google/leveldb) by Google.
+## Features
+
+- Common API across JVM, Android, and Kotlin/Native targets
+- Snapshot and iterator support
+- Typed adapters for common primitives (and JVM BigInteger/BigDecimal)
+- Coroutine-friendly access via `LevelDBInstance` (reentrant, shared per path)
+
+## Supported targets
+
+- Android
+- JVM
+- macOS (x86_64, arm64)
+- Linux (x86_64, arm64)
+- Windows (x86_64)
+- iOS (arm64, simulator arm64)
+
+## Publishing
+
+The Publish workflow supports manual runs with a custom version
+By default it runs tests on Linux only, you can enable full OS tests with `full_tests=true`
+
+## Installation
+
+Kotlin DSL:
+
+```kotlin
+dependencies {
+    implementation("com.edwardstock.leveldb:leveldb:2.0.0")
+}
+```
 
 ## Usage
 
-Add this to your build.gradle:
-
-```groovy
-repositories {
-    mavenCentral()
-}
-```
-
-And then this as a dependency:\n For Android\n
-
-```groovy
-dependencies {
-    implementation 'com.edwardstock:leveldb-android:1.0.0'
-}
-```
-
-For Kotlin\n
-
-```groovy
-dependencies {
-    implementation 'com.edwardstock:leveldb-kt:1.0.0'
-}
-```
-
-## Example
-
-### Opening, Closing, Putting, Deleting
+Basic open/put/get:
 
 ```kotlin
-val levelDb = LevelDB.open("path/to/leveldb", LevelDB.configure().createIfMissing(true))
-// or u can just
+val db = LevelDB.open("/path/to/db") {
+    createIfMissing = true
+}
 
-levelDb.put("leveldb".getBytes(), "Is awesome!")
-val result: String? = levelDb.getString("leveldb")
-val resultBytes: ByteArray? = levelDb.get("leveldb")
+db.put("hello", "world")
+val value = db.getString("hello")
 
-levelDb.put("magic", byteArrayOf(0, 1, 2, 3, 4))
-val magic: ByteArray? = levelDB.get("magic")
-
-// !IMPORTANT! you must close it
-levelDb.close()
+db.close()
 ```
 
-For Android almost the same, but with other class
+Android (multiplatform):
 
 ```kotlin
-import com.edwardstock.leveldb.*
-
-// context can be used for place db file: context.filesDir.toString() + File.separator + (dbName ?: LevelDB.DEFAULT_DBNAME)
-val levelDb = AndroidLevelDB.open(context, LevelDB.configure().createIfMissing(true))
-
-// or also you can use default instance
-val levelDb = LevelDB.open(context, LevelDB.configure().createIfMissing(true))
+// shared code
+val instance = LevelDBInstance(path = context.filesDir.resolve("leveldb").absolutePath.toPath())
+instance.write { put("hello", "android") }
+val value = instance.read { getString("hello") }
+instance.closeAndAwait()
 ```
 
-### The same, but using try-with-resource
+Android (direct LevelDB API):
 
-```java
-class Main {
-    public static myHandler() {
+```kotlin
+val db = LevelDB.open(context.filesDir.resolve("leveldb").absolutePath) {
+    createIfMissing = true
+}
+db.put("hello", "android")
+val value = db.getString("hello")
+db.close()
+```
 
-        try (LevelDB levelDb = LevelDB.open("path/to/leveldb", LevelDB.configure().createIfMissing(true))) {
-            levelDB.put("leveldb".getBytes(), "Is awesome!".getBytes());
-            String value = levelDB.get("leveldb".getBytes());
+Snapshots:
 
-            leveldb.put("magic".getBytes(), new byte[]{0, 1, 2, 3, 4});
-            byte[] magic = levelDB.getBytes("magic".getBytes());
-        }
+```kotlin
+val db = LevelDB.open("/path/to/db") { createIfMissing = true }
+val snap = db.obtainSnapshot()
+
+db.put("k1", "v1")
+val atSnapshot = db.getString("k1", snap) // null if written after snapshot
+
+snap.close()
+db.close()
+```
+
+Iterators:
+
+```kotlin
+val db = LevelDB.open("/path/to/db") { createIfMissing = true }
+db.iterator().use { it ->
+    it.seekToFirst()
+    while (it.isValid) {
+        println(it.keyString() + " -> " + it.valueString())
+        it.next()
     }
 }
+db.close()
 ```
+
+Coroutine-friendly access with a shared instance:
 
 ```kotlin
-val levelDb = LevelDB.open("path/to/leveldb") {
-    createIfMissing(true)
-}
+import okio.Path.Companion.toPath
 
-levelDb.use {
-    levelDb.put("leveldb", "Is awesome!")
-    val result: String? = levelDb.getString("leveldb")
-    val resultBytes: ByteArray? = levelDb["leveldb"]
+val instance = LevelDBInstance(path = "/path/to/db".toPath())
 
-    levelDb.put("magic", byteArrayOf(0, 1, 2, 3, 4))
-    val magic: ByteArray? = levelDB["magic"]
-}
+instance.write { put("a", "1") }
+val value = instance.read { getString("a") }
+
+instance.closeAndAwait()
 ```
 
-### Open using android context
+## LevelDBInstance: `use` and `withPathExclusive`
 
-```kotlin
-val context: context
+`LevelDBInstance.use { ... }` provides a safe, reentrant way to share a single database handle across threads
+and coroutines. It guarantees the DB is opened once per path and closed when idle. Use the convenience wrappers
+`read { ... }` and `write { ... }` when you don't need the full access object.
 
-// it writes db file to: `context.filesDir.toString() + File.separator + DEFAULT_DBNAME`
-val levelDb = LevelDB.open(context) {
-    createIfMissing(true)
-}
+In this context, "shared instance" means: all coroutines/threads that use the same filesystem path will reuse
+the same underlying LevelDB handle. This avoids multiple native opens on the same DB (which can fail with a LOCK
+error) and removes the need for you to manage locks manually. The instance handles reentrancy and lifecycle
+so callers can treat the DB like a safe, reusable resource (similar to the way Room hides its internals).
 
-levelDb.use {
-    levelDb.put("leveldb", "Is awesome!")
-    val result: String? = levelDb.getString("leveldb")
-    val resultBytes: ByteArray? = levelDb["leveldb"]
+`LevelDBInstance.withPathExclusive(path) { ... }` blocks new `use` calls and waits for active users to drain.
+Use it when you need exclusive filesystem access to the DB directory, for example:
 
-    levelDb.put("magic", byteArrayOf(0, 1, 2, 3, 4))
-    val magic: ByteArray? = levelDB["magic"]
-}
-```
+- create a full consistent copy of the DB for backup or sync
+- replace the entire DB directory with a downloaded snapshot
 
-### WriteBatch (a.k.a. Transactions)
+This is ideal for background sync (e.g., an app that periodically swaps in a remote state). When the block
+starts, the DB is fully quiesced; when it ends, normal access resumes. **Do not call `db.use { ... }` inside the
+exclusive block** or you will deadlock. Treat it as “hands off the DB” time while you copy or replace the folder.
 
-```java
-class My {
-    public static void myFun() {
-        LevelDB levelDB = LevelDB.open("path/to/leveldb"); // createIfMissing == true
+## Thread-safety
 
-        levelDB.put("sql".getBytes(), "is lovely!".getBytes());
+- Database access is thread-safe.
+- Iterators and snapshots are not thread-safe and must not be shared across threads without external synchronization.
 
-        levelDB.writeBatch()
-                .put("leveldb".getBytes(), "Is awesome!".getBytes())
-                .put("magic".getBytes(), new byte[]{0, 1, 2, 3, 4})
-                .del("sql".getBytes())
-                .write(); // commit transaction
+## Native binaries (JVM)
 
-        levelDB.close(); // closing is a must!
-    }
+The JVM artifact bundles native libraries under `natives/<arch>` for SciJava native-lib-loader, using:
 
-}
+- `natives/linux_64`
+- `natives/linux_arm64`
+- `natives/osx_64`
+- `natives/osx_arm64`
+- `natives/windows_64`
 
-```
+For contributors, prebuilt JNI binaries live in `native/prebuilt`.
 
-### Iteration Over Key-Value Pairs
+## Licenses
 
-LevelDB is a key-value store, but it has some nice iteration features.
+This project is distributed under:
 
-Every key-value pair inside LevelDB is ordered. Until the comparator wrapper API is finished you can iterate over your LevelDB in the key's
-lexicographical order.
+- BSD-3 Clause (original LevelDB wrapper code)
+- Apache 2.0 (third_party/stojan)
+- MIT (project root LICENSE)
 
-```java
-LevelDB levelDB=LevelDB.open("path/to/leveldb");
+## Attribution
 
-        Iterator iterator=levelDB.iterator();
-
-        for(iterator.seekToFirst();iterator.isValid();iterator.next()){
-        byte[]key=iterator.key();
-        byte[]value=iterator.value();
-        }
-
-        iterator.close(); // closing is a must!
-```
-
-#### Reverse Iteration
-
-*It is somewhat slower than forward iteration.*
-
-```java
-LevelDB levelDB=LevelDB.open("path/to/leveldb");
-
-        Iterator iterator=levelDB.iterator();
-
-        for(iterator.seekToLast();iterator.isValid();iterator.previous()){
-        String key=iterator.key();
-        String value=iterator.value();
-        }
-
-        iterator.close(); // closing is a must!
-```
-
-#### Iterate from a Starting Position
-
-```java
-LevelDB levelDB=LevelDB.open("path/to/leveldb");
-
-        Iterator iterator=levelDB.iterator();
-
-        for(iterator.seek("leveldb".getBytes());iterator.isValid();iterator.next()){
-        String key=iterator.key();
-        String value=iterator.value();
-        }
-
-        iterator.close(); // closing is a must!
-```
-
-This will start from the key `leveldb` if it exists, or from the one that follows (eg. `sql`, i.e. `l` < `s`).
-
-#### Snapshots
-
-Snapshots give you a consistent view of the data in the database at a given time.
-
-Here's a simple example demonstrating their use:
-
-```java
-LevelDB levelDB=LevelDB.open("path/to/leveldb");
-
-        levelDB.put("hello".getBytes(),"world".getBytes());
-
-        Snapshot helloWorld=levelDB.obtainSnapshot();
-
-        levelDB.put("hello".getBytes(),"brave-new-world".getBytes());
-
-        levelDB.get("hello".getBytes(),helloWorld); // == "world"
-
-        levelDB.get("hello".getBytes()); // == "brave-new-world"
-
-        levelDB.releaseSnapshot(helloWorld); // release the snapshot
-
-        levelDB.close(); // snapshots will automatically be released after this
-```
-
-### Mock LevelDB
-
-The implementation also supplies a mock LevelDB implementation that is an in-memory equivalent of the native LevelDB. It is meant to be used in
-testing environments, especially non-Android ones like Robolectric.
-
-There are a few of differences from the native implementation:
-
-+ it is not configurable
-+ it does not support properties (as in `LevelDB#getProperty()`)
-+ it does not support paths, i.e. always returns `:MOCK:`
-
-Use it like so:
-
-```java
-LevelDB.mock();
-```
-
-## Building
-
-Until Google (or someone else) fixes the Android Gradle build tools to properly support NDK, this is the way to build this project.
-
-1. Install the [NDK](https://developer.android.com/ndk)
-2. Build with Gradle (leveldb::assembleRelease)
-
-Or u can build to local maven repository:
-
-```bash
-cd /path/to/project
-sh publish_local.sh
-```
-
-## License
-
-This wrapper library is licensed under the
-[BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause), same as the code from Google.
-
-See `LICENSE.txt` for the full Copyright.
+This project includes code derived from Stojan Dimitrovski's original LevelDB wrapper.
+The original BSD 3-Clause license text is preserved in the source headers and in `third_party`.

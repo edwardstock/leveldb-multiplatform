@@ -3,9 +3,10 @@ build
 local.properties
 
 *.iml
-
+.kotlin
 leveldb/.cxx
 .idea
 .cxx
 .extNativeBuild
 cmake-build*
+*.hprof

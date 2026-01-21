@@ -1,0 +1,41 @@
+name: Check publish secrets
+description: Fail fast when Maven Central or GPG secrets are missing
+inputs:
+  maven_username:
+    description: Maven Central username
+    required: true
+  maven_password:
+    description: Maven Central password
+    required: true
+  gpg_private_key:
+    description: GPG private key
+    required: true
+  gpg_passphrase:
+    description: GPG passphrase
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Verify publish secrets
+      shell: bash
+      run: |
+        missing=0
+        if [ -z "${{ inputs.maven_username }}" ]; then
+          echo "Missing secret: MAVEN_CENTRAL_USERNAME"
+          missing=1
+        fi
+        if [ -z "${{ inputs.maven_password }}" ]; then
+          echo "Missing secret: MAVEN_CENTRAL_PASSWORD"
+          missing=1
+        fi
+        if [ -z "${{ inputs.gpg_private_key }}" ]; then
+          echo "Missing secret: GPG_PRIVATE_KEY"
+          missing=1
+        fi
+        if [ -z "${{ inputs.gpg_passphrase }}" ]; then
+          echo "Missing secret: GPG_PASSPHRASE"
+          missing=1
+        fi
+        if [ "$missing" -ne 0 ]; then
+          exit 1
+        fi
