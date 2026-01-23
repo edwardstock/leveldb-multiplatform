@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             gradle_args: ":leveldb:check"
           - os: ubuntu-24.04-arm64
             gradle_args: ":leveldb:check"
@@ -36,4 +36,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run tests
+        env:
+          JAVA_TOOL_OPTIONS: "-XX:+CreateCoredumpOnCrash -Xlog:os+signal=debug"
         run: ./gradlew ${{ matrix.gradle_args }}
+
+      - name: Upload JVM crash logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jvm-crash-${{ matrix.os }}
+          path: |
+            leveldb/hs_err_pid*.log
+            leveldb/core*
