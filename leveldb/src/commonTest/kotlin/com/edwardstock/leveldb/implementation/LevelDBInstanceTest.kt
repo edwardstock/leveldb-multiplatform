@@ -10,6 +10,7 @@ package com.edwardstock.leveldb.implementation
 import com.edwardstock.leveldb.LevelDBConfig
 import com.edwardstock.leveldb.LevelDBInstance
 import com.edwardstock.leveldb.common.DatabaseTestCase
+import com.edwardstock.leveldb.util.stressConfig
 import com.edwardstock.leveldb.utils.CoSynchronizedList
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CompletableDeferred
@@ -239,11 +240,12 @@ class LevelDBInstanceTest {
         val firstError = atomic<Throwable?>(null)
         val exclusiveRequested = atomic(false)
         val activeWorkers = atomic(0)
+        val config = stressConfig()
 
         coroutineScope {
-            val workers = (0 until 10).map { workerId ->
+            val workers = (0 until config.workers).map { workerId ->
                 launch {
-                    repeat(50) { idx ->
+                    repeat(config.iterations) { idx ->
                         while (exclusiveRequested.value) {
                             kotlinx.coroutines.yield()
                         }
@@ -267,7 +269,7 @@ class LevelDBInstanceTest {
             }
 
             val exclusive = launch {
-                repeat(5) {
+                repeat(config.exclusiveRepeats) {
                     exclusiveRequested.value = true
                     while (activeWorkers.value > 0) {
                         kotlinx.coroutines.yield()

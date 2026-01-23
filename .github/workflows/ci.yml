@@ -10,7 +10,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            gradle_args: ":leveldb:check"
+          - os: ubuntu-24.04-arm64
+            gradle_args: ":leveldb:check"
+          - os: macos-latest
+            gradle_args: ":leveldb:check"
+          - os: windows-latest
+            gradle_args: ":leveldb:mingwX64Test"
 
     steps:
       - name: Checkout
@@ -28,4 +36,4 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run tests
-        run: ./gradlew :leveldb:check
+        run: ./gradlew ${{ matrix.gradle_args }}
