@@ -18,35 +18,25 @@ runs:
         echo "${SDK_ROOT}/cmdline-tools/latest/bin" >> "${GITHUB_PATH}"
         echo "${SDK_ROOT}/platform-tools" >> "${GITHUB_PATH}"
 
+    - name: Cache Android SDK
+      uses: actions/cache@v4
+      env:
+        ANDROID_SDK_CACHE_KEY: >-
+          android-sdk-${{ runner.os }}-${{ hashFiles(
+            '.github/actions/setup-android-tools/action.yml',
+            '.github/actions/setup-android-tools/install_cmdline_tools.sh',
+            '.github/actions/setup-android-tools/install_sdk_packages.sh'
+          ) }}
+      with:
+        path: ${{ env.ANDROID_SDK_ROOT }}
+        key: ${{ env.ANDROID_SDK_CACHE_KEY }}
+        restore-keys: |
+          android-sdk-${{ runner.os }}-
+
     - name: Install Android commandline tools
       shell: bash
-      run: |
-        set -euo pipefail
-        if command -v sdkmanager >/dev/null 2>&1; then
-          exit 0
-        fi
-        mkdir -p "${ANDROID_SDK_ROOT}/cmdline-tools"
-        case "${RUNNER_OS}" in
-          Linux) TOOLS_ZIP="commandlinetools-linux-14742923_latest.zip" ;;
-          macOS) TOOLS_ZIP="commandlinetools-mac-14742923_latest.zip" ;;
-        esac
-        export TOOLS_ZIP
-        curl -fsSL "https://dl.google.com/android/repository/${TOOLS_ZIP}" -o "${RUNNER_TEMP}/${TOOLS_ZIP}"
-        if command -v unzip >/dev/null 2>&1; then
-          unzip -q "${RUNNER_TEMP}/${TOOLS_ZIP}" -d "${ANDROID_SDK_ROOT}/cmdline-tools"
-        else
-          python3 -c 'import os, zipfile; sdk_root=os.environ["ANDROID_SDK_ROOT"]; zip_path=os.path.join(os.environ["RUNNER_TEMP"], os.environ["TOOLS_ZIP"]); dest_dir=os.path.join(sdk_root, "cmdline-tools"); zipfile.ZipFile(zip_path, "r").extractall(dest_dir)'
-        fi
-        mv "${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools" "${ANDROID_SDK_ROOT}/cmdline-tools/latest"
-
-    - name: Accept Android SDK licenses
-      shell: bash
-      run: |
-        set -euo pipefail
-        yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses >/dev/null || true
+      run: ./.github/actions/setup-android-tools/install_cmdline_tools.sh
 
     - name: Install Android SDK packages
       shell: bash
-      run: |
-        set -euo pipefail
-        sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" "platform-tools" "platforms;android-36" "ndk;29.0.14206865" "cmake;4.1.2"
+      run: ./.github/actions/setup-android-tools/install_sdk_packages.sh
