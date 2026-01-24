@@ -28,6 +28,26 @@
       }
     },
     {
+      "name": "linux-x86_64-debug",
+      "inherits": "base",
+      "displayName": "Linux x86_64 (native, Debug)",
+      "generator": "Ninja",
+      "binaryDir": "build/linux-x86_64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "JAVA_INCLUDE_PATH": "third_party/jni_includes/linux_x86_64"
+      }
+    },
+    {
+      "name": "linux-x86_64-release",
+      "inherits": "linux-x86_64-debug",
+      "displayName": "Linux x86_64 (native, Release)",
+      "binaryDir": "build/linux-x86_64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
       "name": "mingw-w64-cross-macos-release",
       "inherits": "base",
       "generator": "Ninja",
@@ -229,6 +249,14 @@
     }
   ],
   "buildPresets": [
+    {
+      "name": "linux-x86_64-debug",
+      "configurePreset": "linux-x86_64-debug"
+    },
+    {
+      "name": "linux-x86_64-release",
+      "configurePreset": "linux-x86_64-release"
+    },
     {
       "name": "mingw-w64-cross-macos-debug",
       "configurePreset": "mingw-w64-cross-macos-debug"

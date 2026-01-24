@@ -37,10 +37,9 @@ parser.add_argument("--force", dest="force", action="store_true", default=False,
 parser.add_argument("--dockcross-dir", dest="dockcross_dir",
                     default=os.environ.get("DOCKCROSS_DIR", ".dockcross-wrappers"),
                     help="Directory to store dockcross wrappers (default: .dockcross-wrappers)")
-parser.add_argument("--use-host-mingw", dest="use_host_mingw", action="store_true", default=True,
-                    help="Prefer host MinGW-w64 toolchain over dockcross for Windows builds")
-parser.add_argument("--all-platforms", dest="all_platforms", action="store_true", default=True,
-                    help="Build all presets, even if not supported on this host")
+parser.add_argument("--no-host-mingw", dest="use_host_mingw", action="store_false", default=True)
+parser.add_argument("--all-platforms", dest="all_platforms", action="store_true", default=False,
+                    help="Include cross targets (dockcross) in addition to host-compatible presets")
 parser.add_argument("--dry-run", dest="dry_run", action="store_true", default=False,
                     help="Print commands that would be run without executing them")
 parser.add_argument("--verbose", dest="verbose", action="store_true", default=False,
@@ -124,7 +123,6 @@ def is_windows_preset(preset: str) -> bool:
     return preset.startswith("windows-")
 
 
-
 def find_mingw_prefix(triplet: str) -> Path | None:
     env_prefix = os.environ.get("MINGW_PREFIX")
     if env_prefix:
@@ -137,11 +135,16 @@ def find_mingw_prefix(triplet: str) -> Path | None:
     return None
 
 
-def host_compatible(variant: Variant, host_os: str) -> tuple[bool, str | None]:
+def host_compatible(variant: Variant, host_os: str, include_cross: bool) -> tuple[bool, str | None]:
     preset = variant.preset
     if is_macos_preset(preset) or is_ios_preset(preset):
         if host_os != "macos":
             return False, "requires macOS host"
+    if is_manylinux_preset(preset):
+        if include_cross and variant.cross is not None:
+            return True, None
+        if host_os != "linux":
+            return False, "requires Linux host"
     if is_windows_preset(preset):
         if host_os != "windows":
             return False, "requires Windows host"
@@ -186,27 +189,25 @@ variants: list[Variant] = [
     ),
 ]
 
-# Filter to host-compatible presets by default.
-if not ALL_PLATFORMS:
-    host_os = detect_host_os()
-    print(f"Host OS: {host_os} (host-compatible presets enabled; use --all-platforms to override)")
-    filtered: list[Variant] = []
-    skipped: list[tuple[str, str]] = []
-    for v in variants:
-        ok, reason = host_compatible(v, host_os)
-        if ok:
-            filtered.append(v)
-        else:
-            skipped.append((v.preset, reason or "unsupported"))
-
-    if skipped:
-        print(f"Skipping {len(skipped)} preset(s) not supported on this host:")
-        for preset, reason in skipped:
-            print(f" - {preset} ({reason})")
+host_os = detect_host_os()
+print(f"Host OS: {host_os} ({'include cross targets' if ALL_PLATFORMS else 'host-compatible presets only'})")
+filtered: list[Variant] = []
+skipped: list[tuple[str, str]] = []
+for v in variants:
+    ok, reason = host_compatible(v, host_os, ALL_PLATFORMS)
+    if ok:
+        filtered.append(v)
     else:
-        print("All presets are host-compatible on this machine.")
+        skipped.append((v.preset, reason or "unsupported"))
 
-    variants = filtered
+if skipped:
+    print(f"Skipping {len(skipped)} preset(s) not supported on this host:")
+    for preset, reason in skipped:
+        print(f" - {preset} ({reason})")
+else:
+    print("All selected presets are supported on this host.")
+
+variants = filtered
 
 # If --preset was provided, filter the variants; exit with non-zero if nothing matches
 if ONLY_PRESET:
@@ -277,6 +278,7 @@ def ensure_dockcross_wrapper(config: DockcrossConfig) -> Path:
     wrapper.write_text(proc.stdout)
     sh(["chmod", "+x", str(wrapper)])
     return wrapper
+
 
 for v in variants:
     print("=>", v.preset)

@@ -3,10 +3,7 @@ name: CodeQL
 on:
   pull_request:
   push:
-    branches:
-      - master
-#  schedule:
-#    - cron: "0 6 * * 1"
+    branches: [ master ]
 
 jobs:
   analyze:
@@ -24,14 +21,27 @@ jobs:
           fetch-depth: 0
           submodules: true
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: cpp, java-kotlin, actions
+          build-mode: manual
           config-file: ./.github/codeql/codeql-config.yml
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+      - name: Build (native Linux for CodeQL)
+        run: |
+          cmake --preset linux-x86_64-debug
+          cmake --build --preset linux-x86_64-debug
+
+      - name: Gradle checks
+        run: |
+          ./gradlew :leveldb:check --no-daemon
 
       - name: Analyze
         uses: github/codeql-action/analyze@v3
