@@ -54,6 +54,10 @@ void checkStatusOrThrow(JNIEnv* env, const cleveldb_status& status, const char* 
     }
 }
 
+static bool hasPendingException(JNIEnv *env) {
+  return env != nullptr && env->ExceptionCheck();
+}
+
 static bool checkHandleOrThrow(jlong handle, JNIEnv* env) {
     if (handle == 0L) {
         checkStatusOrThrow(env, LDB_INVALID_POINTER);
@@ -73,6 +77,19 @@ jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbOpen(
     jint writeBufferSize,
     jstring path
 ) {
+  if (path == nullptr) {
+    checkStatusOrThrow(env, LDB_INVALID_POINTER, "Path is null");
+    return 0L;
+  }
+  jclass stringClass = env->FindClass("java/lang/String");
+  if (stringClass == nullptr || hasPendingException(env)) {
+    return 0L;
+  }
+  if (!env->IsInstanceOf(path, stringClass)) {
+    checkStatusOrThrow(env, LDB_INVALID_ARGUMENT, "Path is not a String");
+    return 0L;
+  }
+
     ScopedUtfChars nativePath(env, path);
     if (!nativePath.isValid()) {
         checkStatusOrThrow(env, LDB_MEMORY_ERROR, "Failed to get native path");
@@ -92,6 +109,9 @@ jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbOpen(
     );
 
     checkStatusOrThrow(env, rc);
+  if (hasPendingException(env)) {
+    return 0L;
+  }
 
     return reinterpret_cast<jlong>(handle);
 }
@@ -183,6 +203,9 @@ jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorValue(
 
     const cleveldb_status rc = leveldb_iter_value(iterator, &buffer, &buffer_len);
     checkStatusOrThrow(env, rc);
+  if (hasPendingException(env)) {
+    return nullptr;
+  }
 
     if (buffer_len == 0) {
         return NewByteArrayFromBytes(env, nullptr, 0);
@@ -210,6 +233,9 @@ jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorKey(
 
     const cleveldb_status rc = leveldb_iter_key(iterator, &buffer, &buffer_len);
     checkStatusOrThrow(env, rc);
+  if (hasPendingException(env)) {
+    return nullptr;
+  }
 
     if (buffer_len == 0) {
         return NewByteArrayFromBytes(env, nullptr, 0);
@@ -397,6 +423,9 @@ jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbGetProperty(
         &buffer_len
     );
     checkStatusOrThrow(env, rc);
+  if (hasPendingException(env)) {
+    return nullptr;
+  }
 
     if (buffer_len == 0) {
         return NewByteArrayFromBytes(env, nullptr, 0);
@@ -439,6 +468,9 @@ jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbGet(
         &buffer_len
     );
     checkStatusOrThrow(env, rc);
+  if (hasPendingException(env)) {
+    return nullptr;
+  }
 
     if (buffer_len == 0) {
         return NewByteArrayFromBytes(env, nullptr, 0);

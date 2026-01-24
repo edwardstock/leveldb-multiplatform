@@ -7,4 +7,10 @@ class LevelDBJvmUtilsTest {
     fun `loadNative does not throw`() {
         LevelDB.loadNative()
     }
+
+    @Test
+    fun `system load does not throw`() {
+        val libPath = System.getProperty("leveldb.jni.path") ?: return
+        System.load(libPath)
+    }
 }

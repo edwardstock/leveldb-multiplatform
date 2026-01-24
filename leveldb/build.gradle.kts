@@ -148,7 +148,6 @@ kotlin {
             dependencies {
                 implementation(libs.kotlin.coroutines.jvm)
                 implementation(libs.kotlin.atomicfu)
-                implementation(libs.native.libloader)
             }
         }
         jvmTest {
@@ -196,7 +195,7 @@ val prepareJvmJniLibs = tasks.register<Sync>("prepareJvmJniLibs") {
     into(jniResourcesDir)
 }
 
-// include prebuilt JNI libs in the JVM resources for SciJava native-lib-loader
+// include prebuilt JNI libs in the JVM resources for the JVM loader
 kotlin.sourceSets.named("jvmMain") {
     resources.srcDir(jniResourcesDir)
 }

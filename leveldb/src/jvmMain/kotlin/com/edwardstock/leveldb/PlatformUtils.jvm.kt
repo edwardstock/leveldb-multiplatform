@@ -19,13 +19,12 @@ import com.edwardstock.leveldb.implementation.UByteConverter
 import com.edwardstock.leveldb.implementation.UIntConverter
 import com.edwardstock.leveldb.implementation.ULongConverter
 import com.edwardstock.leveldb.implementation.UShortConverter
-import org.scijava.nativelib.NativeLoader
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.reflect.KClass
 
 internal actual fun levelDbLoadNativeLibrary() {
-    NativeLoader.loadLibrary(NATIVE_LIB_NAME)
+    JvmNativeLibraryLoader.load(NATIVE_LIB_NAME)
 }
 
 internal actual fun levelDbDefaultAdapters(): MutableMap<KClass<*>, ValueAdapter<out Any>> = mutableMapOf(

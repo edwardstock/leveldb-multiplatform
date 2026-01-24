@@ -1,0 +1,10 @@
+name: Cache Gradle wrapper
+description: Cache Gradle wrapper distributions
+runs:
+  using: composite
+  steps:
+    - name: Cache Gradle wrapper
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle/wrapper/dists
+        key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}

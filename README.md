@@ -142,7 +142,7 @@ exclusive block** or you will deadlock. Treat it as “hands off the DB” time 
 
 ## Native binaries (JVM)
 
-The JVM artifact bundles native libraries under `natives/<arch>` for SciJava native-lib-loader, using:
+The JVM artifact bundles native libraries under `natives/<arch>` for the custom JVM loader, using:
 
 - `natives/linux_64`
 - `natives/linux_arm64`

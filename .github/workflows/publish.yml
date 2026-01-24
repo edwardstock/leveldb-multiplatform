@@ -38,6 +38,9 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
+      - name: Cache Gradle wrapper
+        uses: ./.github/actions/cache-gradle-wrapper
+
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
