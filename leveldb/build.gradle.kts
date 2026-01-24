@@ -56,6 +56,7 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
     jvm {
+        withSourcesJar(true)
         compilations.configureEach {
             compileTaskProvider.configure {
                 compilerOptions {
@@ -75,6 +76,7 @@ kotlin {
         minSdk { version = release(libs.versions.android.minSdk.get().toInt()) }
         compileSdk { version = release(libs.versions.android.compileSdk.get().toInt()) }
         namespace = group as String
+        withSourcesJar(true)
     }
 
     iosSimulatorArm64()

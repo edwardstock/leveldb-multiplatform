@@ -32,6 +32,10 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
+      - name: Set up Android tools
+        if: runner.os == 'Linux'
+        uses: ./.github/actions/setup-android-tools
+
       - name: Cache Gradle wrapper
         uses: ./.github/actions/cache-gradle-wrapper
 

@@ -38,6 +38,10 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
+      - name: Set up Android tools
+        if: runner.os == 'Linux'
+        uses: ./.github/actions/setup-android-tools
+
       - name: Cache Gradle wrapper
         uses: ./.github/actions/cache-gradle-wrapper
 
@@ -61,6 +65,7 @@ jobs:
               :leveldb:publishKotlinMultiplatformPublicationToMavenCentralRepository
               :leveldb:publishJvmPublicationToMavenCentralRepository
               :leveldb:publishAndroidPublicationToMavenCentralRepository
+              :leveldb-android-native:publishReleasePublicationToMavenCentralRepository
               :leveldb:publishLinuxX64PublicationToMavenCentralRepository
               :leveldb:publishMingwX64PublicationToMavenCentralRepository
           - os: ubuntu-24.04-arm
@@ -98,6 +103,10 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "17"
+
+      - name: Set up Android tools
+        if: runner.os == 'Linux'
+        uses: ./.github/actions/setup-android-tools
 
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4

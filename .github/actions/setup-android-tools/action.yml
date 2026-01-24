@@ -1,0 +1,52 @@
+name: Setup Android SDK/NDK/CMake
+description: Install Android SDK, required NDK, and CMake for native builds.
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure Android SDK environment
+      shell: bash
+      run: |
+        set -euo pipefail
+        case "${RUNNER_OS}" in
+          Linux) SDK_ROOT="$HOME/android-sdk" ;;
+          macOS) SDK_ROOT="$HOME/Library/Android/sdk" ;;
+          *) echo "Unsupported OS: ${RUNNER_OS}" >&2; exit 1 ;;
+        esac
+        echo "ANDROID_SDK_ROOT=${SDK_ROOT}" >> "${GITHUB_ENV}"
+        echo "ANDROID_HOME=${SDK_ROOT}" >> "${GITHUB_ENV}"
+        echo "${SDK_ROOT}/cmdline-tools/latest/bin" >> "${GITHUB_PATH}"
+        echo "${SDK_ROOT}/platform-tools" >> "${GITHUB_PATH}"
+
+    - name: Install Android commandline tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        if command -v sdkmanager >/dev/null 2>&1; then
+          exit 0
+        fi
+        mkdir -p "${ANDROID_SDK_ROOT}/cmdline-tools"
+        case "${RUNNER_OS}" in
+          Linux) TOOLS_ZIP="commandlinetools-linux-14742923_latest.zip" ;;
+          macOS) TOOLS_ZIP="commandlinetools-mac-14742923_latest.zip" ;;
+        esac
+        export TOOLS_ZIP
+        curl -fsSL "https://dl.google.com/android/repository/${TOOLS_ZIP}" -o "${RUNNER_TEMP}/${TOOLS_ZIP}"
+        if command -v unzip >/dev/null 2>&1; then
+          unzip -q "${RUNNER_TEMP}/${TOOLS_ZIP}" -d "${ANDROID_SDK_ROOT}/cmdline-tools"
+        else
+          python3 -c 'import os, zipfile; sdk_root=os.environ["ANDROID_SDK_ROOT"]; zip_path=os.path.join(os.environ["RUNNER_TEMP"], os.environ["TOOLS_ZIP"]); dest_dir=os.path.join(sdk_root, "cmdline-tools"); zipfile.ZipFile(zip_path, "r").extractall(dest_dir)'
+        fi
+        mv "${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools" "${ANDROID_SDK_ROOT}/cmdline-tools/latest"
+
+    - name: Accept Android SDK licenses
+      shell: bash
+      run: |
+        set -euo pipefail
+        yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses >/dev/null || true
+
+    - name: Install Android SDK packages
+      shell: bash
+      run: |
+        set -euo pipefail
+        sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" "platform-tools" "platforms;android-36" "ndk;29.0.14206865" "cmake;4.1.2"
