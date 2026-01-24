@@ -63,7 +63,7 @@ jobs:
               :leveldb:publishAndroidPublicationToMavenCentralRepository
               :leveldb:publishLinuxX64PublicationToMavenCentralRepository
               :leveldb:publishMingwX64PublicationToMavenCentralRepository
-          - os: ubuntu-24.04-arm64
+          - os: ubuntu-24.04-arm
             install_mingw: false
             publish_tasks: >-
               :leveldb:publishLinuxArm64PublicationToMavenCentralRepository
