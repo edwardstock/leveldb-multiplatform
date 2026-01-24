@@ -3,7 +3,7 @@ name: CodeQL
 on:
   pull_request:
   push:
-    branches: [ main, master ]
+    branches: [ master ]
 
 jobs:
   analyze:
@@ -20,8 +20,9 @@ jobs:
         include:
           - language: c-cpp
             build-mode: manual
-          - language: java-kotlin
-            build-mode: manual
+          #            kotlin 2.3 is not supported by CodeQL yet
+          #          - language: java-kotlin
+          #            build-mode: manual
           - language: actions
             build-mode: none
 
