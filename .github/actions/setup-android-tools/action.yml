@@ -35,8 +35,8 @@ runs:
 
     - name: Install Android commandline tools
       shell: bash
-      run: ./.github/actions/setup-android-tools/install_cmdline_tools.sh
+      run: bash ./.github/actions/setup-android-tools/install_cmdline_tools.sh
 
     - name: Install Android SDK packages
       shell: bash
-      run: ./.github/actions/setup-android-tools/install_sdk_packages.sh
+      run: bash ./.github/actions/setup-android-tools/install_sdk_packages.sh
