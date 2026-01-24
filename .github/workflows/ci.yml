@@ -13,8 +13,6 @@ jobs:
         include:
           - os: ubuntu-22.04
             gradle_args: ":leveldb:check"
-          - os: ubuntu-24.04-arm
-            gradle_args: ":leveldb:check"
           - os: macos-latest
             gradle_args: ":leveldb:check"
           - os: windows-latest

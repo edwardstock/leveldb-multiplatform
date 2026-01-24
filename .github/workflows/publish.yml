@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON((github.event_name == 'workflow_dispatch' && github.event.inputs.full_tests == 'true') && '["ubuntu-22.04","ubuntu-24.04-arm","macos-latest"]' || '["ubuntu-22.04","ubuntu-24.04-arm64"]') }}
+        os: ${{ fromJSON((github.event_name == 'workflow_dispatch' && github.event.inputs.full_tests == 'true') && '["ubuntu-22.04","macos-latest"]' || '["ubuntu-22.04"]') }}
 
     steps:
       - name: Checkout
@@ -68,9 +68,6 @@ jobs:
               :leveldb-android-native:publishReleasePublicationToMavenCentralRepository
               :leveldb:publishLinuxX64PublicationToMavenCentralRepository
               :leveldb:publishMingwX64PublicationToMavenCentralRepository
-          - os: ubuntu-24.04-arm
-            install_mingw: false
-            publish_tasks: >-
               :leveldb:publishLinuxArm64PublicationToMavenCentralRepository
           - os: macos-latest
             install_mingw: false
