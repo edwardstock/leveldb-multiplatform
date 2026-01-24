@@ -60,7 +60,6 @@ actual val NULL_DB_SNAPSHOT_HANDLE: DbSnapshotHandle = NativeDbSnapshotHandle(NU
 actual data object LevelDBNativeProvider : LevelDBNative {
     actual val impl: LevelDBNative = this
 
-    @Throws(LevelDBException::class)
     override fun dbOpen(
         createIfMissing: Boolean,
         paranoidChecks: Boolean,
@@ -91,7 +90,6 @@ actual data object LevelDBNativeProvider : LevelDBNative {
     override fun dbClose(handle: DbHandle) = handle.close()
 
 
-    @Throws(LevelDBException::class)
     override fun dbPut(handle: DbHandle, sync: Boolean, key: ByteArray, value: ByteArray): Unit = pinScope {
         val status = leveldb_put(
             holder = handle.requirePtr(),
@@ -111,7 +109,6 @@ actual data object LevelDBNativeProvider : LevelDBNative {
      * @param key
      * @throws LevelDBException
      */
-    @Throws(LevelDBException::class)
     override fun dbDelete(handle: DbHandle, sync: Boolean, key: ByteArray): Unit = pinScope {
         val status = leveldb_delete(
             holder = handle.requirePtr(),
@@ -122,7 +119,6 @@ actual data object LevelDBNativeProvider : LevelDBNative {
         status.throwIfError()
     }
 
-    @Throws(LevelDBException::class)
     override fun dbWrite(handle: DbHandle, sync: Boolean, batchHandle: DbBatchHandle): Unit = pinScope {
         val status = leveldb_write(
             holder = handle.requirePtr(),
@@ -139,7 +135,6 @@ actual data object LevelDBNativeProvider : LevelDBNative {
      * @return
      * @throws LevelDBException
      */
-    @Throws(LevelDBException::class)
     override fun dbGet(handle: DbHandle, key: ByteArray, snapshotHandle: DbSnapshotHandle): ByteArray? = memScoped {
         val reader = allocBufferReader()
         val status = pinScope {
@@ -183,7 +178,6 @@ actual data object LevelDBNativeProvider : LevelDBNative {
      * @param path
      * @throws LevelDBException
      */
-    @Throws(LevelDBException::class)
     override fun dbDestroy(path: String) {
         leveldb_destroy(path).throwIfError()
     }
@@ -193,7 +187,6 @@ actual data object LevelDBNativeProvider : LevelDBNative {
      * @param path
      * @throws LevelDBException
      */
-    @Throws(LevelDBException::class)
     override fun dbRepair(path: String) {
         leveldb_repair(path).throwIfError()
     }

@@ -5,6 +5,8 @@
 
 package com.edwardstock.leveldb
 
+import com.edwardstock.leveldb.exception.LevelDBException
+
 actual typealias DbHandle = Long
 actual typealias DbBatchHandle = Long
 actual typealias DbSnapshotHandle = Long
@@ -19,6 +21,7 @@ actual val NULL_DB_SNAPSHOT_HANDLE: DbSnapshotHandle = 0L
 actual data object LevelDBNativeProvider : LevelDBNative {
     actual val impl: LevelDBNative = this
 
+    @Throws(LevelDBException::class)
     external override fun dbOpen(
         createIfMissing: Boolean,
         paranoidChecks: Boolean,
@@ -28,8 +31,10 @@ actual data object LevelDBNativeProvider : LevelDBNative {
         path: String,
     ): DbHandle
 
+    @Throws(LevelDBException::class)
     external override fun dbDestroy(path: String)
 
+    @Throws(LevelDBException::class)
     external override fun dbRepair(path: String)
 
     external override fun batchCreate(): DbBatchHandle
@@ -62,16 +67,21 @@ actual data object LevelDBNativeProvider : LevelDBNative {
 
     external override fun dbSnapshot(handle: DbHandle): DbSnapshotHandle
 
+    @Throws(LevelDBException::class)
     external override fun dbIterate(handle: DbHandle, fillCache: Boolean, snapshotHandle: DbSnapshotHandle): DbIteratorHandle
 
     external override fun dbGetProperty(handle: DbHandle, key: ByteArray): ByteArray?
 
+    @Throws(LevelDBException::class)
     external override fun dbGet(handle: DbHandle, key: ByteArray, snapshotHandle: DbSnapshotHandle): ByteArray?
 
+    @Throws(LevelDBException::class)
     external override fun dbWrite(handle: DbHandle, sync: Boolean, batchHandle: DbBatchHandle)
 
+    @Throws(LevelDBException::class)
     external override fun dbDelete(handle: DbHandle, sync: Boolean, key: ByteArray)
 
+    @Throws(LevelDBException::class)
     external override fun dbPut(handle: DbHandle, sync: Boolean, key: ByteArray, value: ByteArray)
 
     external override fun dbClose(handle: DbHandle)
