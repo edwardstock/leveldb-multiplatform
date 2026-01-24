@@ -50,6 +50,14 @@ if (TARGET leveldbutil)
         EXCLUDE_FROM_ALL TRUE
         EXCLUDE_FROM_DEFAULT_BUILD TRUE)
 endif()
+if (TARGET leveldb)
+    # Avoid duplicate C API symbols: we provide our own cleveldb wrappers.
+    get_target_property(_leveldb_sources leveldb SOURCES)
+    if (_leveldb_sources)
+        list(FILTER _leveldb_sources EXCLUDE REGEX "db/c\\.cc$")
+        set_property(TARGET leveldb PROPERTY SOURCES "${_leveldb_sources}")
+    endif ()
+endif ()
 
 set(KOTLIN_CINTEROP_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/cinterop/cleveldb.h

@@ -4,14 +4,14 @@
 
 from __future__ import annotations
 
+import argparse
 import os
 import platform
 import shutil
-import argparse
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import run, Popen, CalledProcessError, DEVNULL
-import sys
 
 
 @dataclass
@@ -37,9 +37,9 @@ parser.add_argument("--force", dest="force", action="store_true", default=False,
 parser.add_argument("--dockcross-dir", dest="dockcross_dir",
                     default=os.environ.get("DOCKCROSS_DIR", ".dockcross-wrappers"),
                     help="Directory to store dockcross wrappers (default: .dockcross-wrappers)")
-parser.add_argument("--use-host-mingw", dest="use_host_mingw", action="store_true", default=False,
+parser.add_argument("--use-host-mingw", dest="use_host_mingw", action="store_true", default=True,
                     help="Prefer host MinGW-w64 toolchain over dockcross for Windows builds")
-parser.add_argument("--all-platforms", dest="all_platforms", action="store_true", default=False,
+parser.add_argument("--all-platforms", dest="all_platforms", action="store_true", default=True,
                     help="Build all presets, even if not supported on this host")
 parser.add_argument("--dry-run", dest="dry_run", action="store_true", default=False,
                     help="Print commands that would be run without executing them")
