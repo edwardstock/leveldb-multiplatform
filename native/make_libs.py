@@ -163,6 +163,12 @@ variants: list[Variant] = [
     Variant(
         preset=f"macos-x86_64-{BUILD_TYPE}"
     ),
+    Variant(
+        preset=f"ios-simulator-arm64-{BUILD_TYPE}"
+    ),
+    Variant(
+        preset=f"ios-device-arm64-{BUILD_TYPE}"
+    ),
 
     Variant(
         preset=f"manylinux2014-x64-{BUILD_TYPE}",

@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON((github.event_name == 'workflow_dispatch' && github.event.inputs.full_tests == 'true') && '["ubuntu-22.04","ubuntu-24.04-arm64","macos-latest"]' || '["ubuntu-22.04","ubuntu-24.04-arm64"]') }}
+        os: ${{ fromJSON((github.event_name == 'workflow_dispatch' && github.event.inputs.full_tests == 'true') && '["ubuntu-22.04","ubuntu-24.04-arm","macos-latest"]' || '["ubuntu-22.04","ubuntu-24.04-arm64"]') }}
 
     steps:
       - name: Checkout
