@@ -126,7 +126,7 @@ mavenPublishing {
                 name.set("Eduard Maximovich")
                 email.set("edward.vstock@gmail.com")
                 roles.add("forker")
-                timezone.set("Europe/Mardid")
+                timezone.set("Europe/Madrid")
             }
             developer {
                 id.set("hf")
