@@ -3,7 +3,7 @@ name: CodeQL
 on:
   pull_request:
   push:
-    branches: [ master ]
+    branches: [ main, master ]
 
 jobs:
   analyze:
@@ -48,6 +48,7 @@ jobs:
 
       - name: Build native C/C++ (for CodeQL)
         if: matrix.language == 'c-cpp'
+        working-directory: native
         run: |
           cmake --preset linux-x86_64-debug
           cmake --build --preset linux-x86_64-debug
