@@ -71,9 +71,6 @@ android {
         jniLibs.keepDebugSymbols += "**/*.so"
     }
 
-    publishing {
-        singleVariant("release") { withSourcesJar() }
-    }
 }
 
 
