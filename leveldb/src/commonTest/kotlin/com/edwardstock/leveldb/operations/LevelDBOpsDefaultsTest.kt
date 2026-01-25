@@ -7,7 +7,6 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import com.edwardstock.leveldb.exception.LevelDBNotFoundException
 import kotlin.test.assertTrue
 
 class LevelDBOpsDefaultsTest {
@@ -34,8 +33,8 @@ class LevelDBOpsDefaultsTest {
 
         assertEquals("v1", v1)
         assertEquals("v2", v2)
-        assertTrue(propertyResult.isFailure)
-        assertTrue(propertyResult.exceptionOrNull() is LevelDBNotFoundException)
+        assertTrue(propertyResult.isSuccess)
+        assertNull(propertyResult.getOrNull())
         db.closeAndAwait()
     }
 
