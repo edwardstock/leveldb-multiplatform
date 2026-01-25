@@ -129,14 +129,7 @@ class NativeLevelDB(
      */
     @Throws(LevelDBSnapshotOwnershipException::class, LevelDBException::class)
     override fun get(key: ByteArray, snapshot: Snapshot?): ByteArray? {
-        if (snapshot != null) {
-            if (snapshot !is NativeSnapshot) {
-                throw LevelDBSnapshotOwnershipException()
-            }
-            if (!snapshot.checkOwner(this)) {
-                throw LevelDBSnapshotOwnershipException()
-            }
-        }
+        snapshot.ensureOwnership()
         checkIfClosed()
 
         return try {
@@ -211,20 +204,13 @@ class NativeLevelDB(
      */
     @Throws(LevelDBSnapshotOwnershipException::class, LevelDBClosedException::class)
     override fun iterator(fillCache: Boolean, snapshot: Snapshot?): LevelDBIterator {
-        if (snapshot != null) {
-            if (snapshot !is NativeSnapshot) {
-                throw LevelDBSnapshotOwnershipException()
-            }
-            if (!snapshot.checkOwner(this)) {
-                throw LevelDBSnapshotOwnershipException()
-            }
-        }
+        snapshot.ensureOwnership()
         checkIfClosed()
         return NativeIterator(
             LevelDBNativeProvider.impl.dbIterate(
                 handle = handle,
                 fillCache = fillCache,
-                snapshotHandle = snapshot?.handle ?: NULL_DB_SNAPSHOT_HANDLE
+                snapshotHandle = (snapshot as? NativeSnapshot)?.handle ?: NULL_DB_SNAPSHOT_HANDLE
             )
         )
     }
@@ -261,6 +247,13 @@ class NativeLevelDB(
     private fun checkIfClosed() {
         if (isClosed) {
             throw LevelDBClosedException()
+        }
+    }
+
+    private fun Snapshot?.ensureOwnership() {
+        if (this == null) return
+        if (this !is NativeSnapshot || !this.checkOwner(this@NativeLevelDB)) {
+            throw LevelDBSnapshotOwnershipException()
         }
     }
 

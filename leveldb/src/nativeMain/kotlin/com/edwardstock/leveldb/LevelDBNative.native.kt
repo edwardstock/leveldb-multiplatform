@@ -9,6 +9,7 @@ package com.edwardstock.leveldb
 
 import cnames.structs.ndb_holder
 import com.edwardstock.leveldb.exception.LevelDBException
+import com.edwardstock.leveldb.interop.LDB_NOT_FOUND
 import com.edwardstock.leveldb.interop.leveldb_batch_create
 import com.edwardstock.leveldb.interop.leveldb_batch_delete
 import com.edwardstock.leveldb.interop.leveldb_batch_put
@@ -147,6 +148,9 @@ actual data object LevelDBNativeProvider : LevelDBNative {
                 out_len = reader.lenPtr
             )
         }
+        if (status == LDB_NOT_FOUND) {
+            return@memScoped null
+        }
         status.throwIfError()
 
         reader.readBytes()
@@ -168,6 +172,9 @@ actual data object LevelDBNativeProvider : LevelDBNative {
                 out = reader.bufferPtr,
                 out_len = reader.lenPtr
             )
+        }
+        if (rc == LDB_NOT_FOUND) {
+            return@memScoped null
         }
         rc.throwIfError()
         reader.readBytes()

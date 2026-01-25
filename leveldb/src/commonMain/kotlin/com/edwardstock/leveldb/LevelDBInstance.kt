@@ -1,9 +1,7 @@
 package com.edwardstock.leveldb
 
-import com.edwardstock.leveldb.operations.LevelDBReader
-import com.edwardstock.leveldb.operations.LevelDBReaderImpl
-import com.edwardstock.leveldb.operations.LevelDBWriter
-import com.edwardstock.leveldb.operations.LevelDBWriterImpl
+import com.edwardstock.leveldb.operations.LevelDBOps
+import com.edwardstock.leveldb.operations.LevelDBOpsImpl
 import kotlinx.atomicfu.locks.reentrantLock
 import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.CoroutineScope
@@ -46,7 +44,7 @@ open class LevelDBInstance(
     private val fileSystem: FileSystem = FileSystem.SYSTEM,
     protected val factory: LevelDBFactory = LevelDB.DEFAULT_FACTORY,
     scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
-) : CoroutineScope by scope, AutoCloseable {
+) : CoroutineScope by scope {
 
     internal data class Entry(
         val path: String,
@@ -169,10 +167,10 @@ open class LevelDBInstance(
     /**
      * Opens or reuses the per-path DB, reentrant-safe
      *
-     * Use this to safely access the shared DB instance across coroutines/threads
-     * Inside the block you can call [LevelDBAccess.read] and [LevelDBAccess.write]
+     * Use this to safely access the shared DB instance across coroutines/threads.
+     * Inside the block you can call any [LevelDBOps] operations (read/write).
      */
-    suspend fun <T> use(block: suspend LevelDBAccess.() -> T): T {
+    suspend fun <T> use(block: suspend LevelDBOps.() -> T): T {
         val existing = coroutineContext[ReentryKey]
         val token = existing ?: ReentryToken()
         val ctx = if (existing == null) coroutineContext + token else coroutineContext
@@ -200,8 +198,8 @@ open class LevelDBInstance(
 
             try {
                 val db = requireNotNull(entry.db) { "LevelDB not opened for ${entry.path}" }
-
-                LevelDBAccess(entry, db).block()
+                val ops: LevelDBOps = LevelDBOpsImpl(db)
+                ops.block()
             } finally {
                 var becameOutermost = false
                 entry.state.withLock {
@@ -222,43 +220,6 @@ open class LevelDBInstance(
     }
 
     /**
-     * Convenience wrapper for [use] with a read-only block
-     */
-    suspend fun <T> read(block: LevelDBReader.() -> T): T = use { read(block) }
-
-    /**
-     * Convenience wrapper for [use] with a write block
-     */
-    suspend fun <T> write(block: LevelDBWriter.() -> T): T = use { write(block) }
-
-    /**
-     * Provides read/write views of the underlying DB
-     *
-     * Instances are short-lived and should not escape the [use] block
-     */
-    /**
-     * Short-lived read/write view used inside [use]
-     */
-    class LevelDBAccess internal constructor(
-        private val entry: Entry,
-        private val db: LevelDB,
-    ) {
-        /**
-         * Execute a read-only block against the DB
-         */
-        fun <T> read(block: LevelDBReader.() -> T): T {
-            return LevelDBReaderImpl(db).block()
-        }
-
-        /**
-         * Execute a write block against the DB
-         */
-         fun <T> write(block: LevelDBWriter.() -> T): T {
-            return LevelDBWriterImpl(db).block()
-        }
-    }
-
-    /**
      * Closes the underlying DB if idle and waits for completion
      */
     suspend fun closeAndAwait() {
@@ -267,7 +228,7 @@ open class LevelDBInstance(
         }
     }
 
-    override fun close() {
+    fun close() {
         // best-effort async close; callers can close the DB explicitly when they need determinism
         launch(Dispatchers.IO + NonCancellable) { closeIfIdle(entry) }
     }

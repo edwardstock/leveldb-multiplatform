@@ -5,7 +5,7 @@ import com.edwardstock.leveldb.LevelDBConfig
 import com.edwardstock.leveldb.LevelDBInstance
 import com.edwardstock.leveldb.exception.LevelDBException
 import com.edwardstock.leveldb.implementation.NativeLevelDB
-import com.edwardstock.leveldb.operations.LevelDBReader
+import com.edwardstock.leveldb.operations.LevelDBOps
 import okio.Path
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -17,7 +17,7 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * Use with care as it iterates over all data
  */
-fun LevelDBReader.forEachAll(block: (String, String) -> Unit) {
+fun LevelDBOps.forEachAll(block: (String, String) -> Unit) {
     iterator().use {
         it.seekToFirst()
         while (it.isValid) {
@@ -41,7 +41,7 @@ fun LevelDB.forEachAll(block: (String, String) -> Unit) {
  * Iterate over all existing keys
  * It'a faster than [forEachAll] as it doesn't get values from slice
  */
-fun LevelDBReader.forEachKeys(block: (String) -> Unit) {
+fun LevelDBOps.forEachKeys(block: (String) -> Unit) {
     iterator().use {
         it.seekToFirst()
         while (it.isValid) {
@@ -64,7 +64,7 @@ fun LevelDB.forEachKeys(block: (String) -> Unit) {
  * Iterate over all existing values
  * It'a faster than [forEachAll] as it doesn't get keys from slice
  */
-fun LevelDBReader.forEachValues(block: (String) -> Unit) {
+fun LevelDBOps.forEachValues(block: (String) -> Unit) {
     iterator().use {
         it.seekToFirst()
         while (it.isValid) {
@@ -92,7 +92,7 @@ fun LevelDB.forEachValues(block: (String) -> Unit) {
  * Single-shot that helps you to open and close db automatically and only when it needs
  */
 @Throws(LevelDBException::class, CancellationException::class)
-suspend fun <T> use(db: LevelDBInstance, block: suspend LevelDBInstance.LevelDBAccess.() -> T) =
+suspend fun <T> use(db: LevelDBInstance, block: suspend LevelDBOps.() -> T) =
     db.use(block)
 
 /**

@@ -36,22 +36,20 @@ class LevelDBInstanceTest {
         val db = newInstance(DatabaseTestCase.createRandomDbPath())
 
         val job1 = launch {
-            db.use { write { put("x", "1"); get("x") } }
+            db.use { put("x", "1"); get("x") }
         }
         val job2 = launch {
             db.use {
-                write {
-                    put("y", "2")
-                }
+                put("y", "2")
                 // accidental nested use
-                db.use { read { get("y") } }
+                db.use { get("y") }
             }
         }
         job1.join()
         job2.join()
 
-        val v1 = db.use { read { getString("x") } }
-        val v2 = db.use { read { getString("y") } }
+        val v1 = db.use { getString("x") }
+        val v2 = db.use { getString("y") }
         assertEquals("1", v1)
         assertEquals("2", v2)
     }
@@ -59,26 +57,26 @@ class LevelDBInstanceTest {
     @Test
     fun `read and write helpers reuse use block`() = runTest {
         val db = newInstance(DatabaseTestCase.createRandomDbPath())
-        db.write { put("a", "1") }
-        val v = db.read { getString("a") }
+        db.use { put("a", "1") }
+        val v = db.use { getString("a") }
         assertEquals("1", v)
     }
 
     @Test
     fun `closeAndAwait closes idle DB and allows reopen`() = runTest {
         val db = newInstance(DatabaseTestCase.createRandomDbPath())
-        db.write { put("k", "v") }
+        db.use { put("k", "v") }
         db.closeAndAwait()
-        val v = db.read { getString("k") }
+        val v = db.use { getString("k") }
         assertEquals("v", v)
     }
 
     @Test
     fun `close schedules async close without breaking access`() = runTest {
         val db = newInstance(DatabaseTestCase.createRandomDbPath())
-        db.write { put("k", "v") }
+        db.use { put("k", "v") }
         db.close()
-        val v = db.read { getString("k") }
+        val v = db.use { getString("k") }
         assertEquals("v", v)
     }
 
@@ -95,15 +93,13 @@ class LevelDBInstanceTest {
             val outer = launch {
                 db.use {
                     leaseEntered.complete(Unit)
-                    write {
-                        put("k", "v0")
-                        put("k", "v1")
-                    }
+                    put("k", "v0")
+                    put("k", "v1")
 
                     outerMayFinish.send(Unit) // allow main to release us
 
                     // nested use should not deadlock
-                    db.use { read { get("k") } }
+                    db.use { get("k") }
                 }
             }
 
@@ -121,7 +117,7 @@ class LevelDBInstanceTest {
             exclusive.join()
 
             // After exclusive, DB still usable and value is last write
-            val v = db.use { read { getString("k") } }
+            val v = db.use { getString("k") }
             assertEquals("v1", v)
             assertTrue(enteredExclusive.tryReceive().isSuccess)
         }
@@ -166,13 +162,11 @@ class LevelDBInstanceTest {
 
         runCatching {
             db.use {
-                write {
-                    put("boom", "1")
-                    error("mid-failure")
-                }
+                put("boom", "1")
+                error("mid-failure")
             }
         }
-        val v = db.use { read { getString("boom") } }
+        val v = db.use { getString("boom") }
         assertEquals("1", v)
     }
 
@@ -182,8 +176,8 @@ class LevelDBInstanceTest {
         val a = newInstance(file)
         val b = newInstance(file)
 
-        a.use { write { put("z", "9") } }
-        val fromB = b.use { read { getString("z") } }
+        a.use { put("z", "9") }
+        val fromB = b.use { getString("z") }
         assertEquals("9", fromB)
     }
 
@@ -203,9 +197,7 @@ class LevelDBInstanceTest {
                 keys.chunked(20).forEach { chunk ->
                     jobs += launch {
                         db.use {
-                            write {
-                                chunk.forEach { k -> put(k, k) }
-                            }
+                            chunk.forEach { k -> put(k, k) }
                         }
 
                     }
@@ -217,10 +209,8 @@ class LevelDBInstanceTest {
                     jobs += launch {
                         chunk.forEach { k ->
                             db.use {
-                                read {
-                                    val v = getString(k)
-                                    if (k == v) ok.incrementAndGet()
-                                }
+                                val v = getString(k)
+                                if (k == v) ok.incrementAndGet()
                             }
                         }
                     }
@@ -253,9 +243,9 @@ class LevelDBInstanceTest {
                             activeWorkers.incrementAndGet()
                             db.use {
                                 if ((idx + workerId) % 2 == 0) {
-                                    write { put("k$idx", "v$idx") }
+                                    put("k$idx", "v$idx")
                                 } else {
-                                    read { get("k$idx") }
+                                    get("k$idx")
                                 }
                             }
                         }.onFailure { err ->

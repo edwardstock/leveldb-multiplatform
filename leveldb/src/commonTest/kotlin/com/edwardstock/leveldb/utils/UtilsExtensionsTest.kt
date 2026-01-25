@@ -13,7 +13,7 @@ class UtilsExtensionsTest {
         val path = DatabaseTestCase.createRandomDbPath()
         val instance = LevelDBInstance(path, LevelDBConfig(createIfMissing = true))
 
-        instance.write {
+        instance.use {
             put("a", "1")
             put("b", "2")
         }
@@ -22,7 +22,7 @@ class UtilsExtensionsTest {
         val readerKeys = mutableListOf<String>()
         val readerValues = mutableListOf<String>()
 
-        instance.read {
+        instance.use {
             forEachAll { k, v -> readerAll += k to v }
             forEachKeys { readerKeys += it }
             forEachValues { readerValues += it }

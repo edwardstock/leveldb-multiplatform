@@ -58,8 +58,8 @@ Android (multiplatform):
 ```kotlin
 // shared code
 val instance = LevelDBInstance(path = context.filesDir.resolve("leveldb").absolutePath.toPath())
-instance.write { put("hello", "android") }
-val value = instance.read { getString("hello") }
+instance.use { put("hello", "android") }
+val value = instance.use { getString("hello") }
 instance.closeAndAwait()
 ```
 
@@ -108,17 +108,24 @@ import okio.Path.Companion.toPath
 
 val instance = LevelDBInstance(path = "/path/to/db".toPath())
 
-instance.write { put("a", "1") }
-val value = instance.read { getString("a") }
+instance.use { put("a", "1") }
+val value = instance.use { getString("a") }
 
 instance.closeAndAwait()
 ```
 
 ## LevelDBInstance: `use` and `withPathExclusive`
 
+Raw `LevelDB` vs `LevelDBInstance`
+
+- `LevelDB` (raw): you open/close the native DB yourself. Good for simple, single-threaded use or when you fully manage lifecycle and locking.
+- `LevelDBInstance`: a shared, coroutine-friendly manager that opens the DB once per path, reuses it across callers, handles reentrancy, and closes
+  when idle. The `use { ... }` block exposes a scoped `LevelDBOps` (full read/write) but does **not** expose teardown APIs, so you can’t accidentally
+  `close()/destroy()` mid-lease. Use this when multiple coroutines/threads may hit the same DB path and you want safe sharing without manual locking.
+
 `LevelDBInstance.use { ... }` provides a safe, reentrant way to share a single database handle across threads
 and coroutines. It guarantees the DB is opened once per path and closed when idle. Use the convenience wrappers
-`read { ... }` and `write { ... }` when you don't need the full access object.
+by calling operations directly inside `use { ... }` (the receiver is a unified `LevelDBOps` with read/write APIs).
 
 In this context, "shared instance" means: all coroutines/threads that use the same filesystem path will reuse
 the same underlying LevelDB handle. This avoids multiple native opens on the same DB (which can fail with a LOCK

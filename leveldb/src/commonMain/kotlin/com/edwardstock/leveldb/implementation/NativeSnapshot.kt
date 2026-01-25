@@ -68,6 +68,4 @@ class NativeSnapshot internal constructor(
             handle = null
         }
     }
-
-
 }

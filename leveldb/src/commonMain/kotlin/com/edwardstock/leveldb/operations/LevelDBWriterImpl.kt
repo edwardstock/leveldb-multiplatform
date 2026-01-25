@@ -6,12 +6,35 @@
 package com.edwardstock.leveldb.operations
 
 import com.edwardstock.leveldb.LevelDB
+import com.edwardstock.leveldb.LevelDBIterator
+import com.edwardstock.leveldb.Snapshot
 import com.edwardstock.leveldb.WriteBatch
 import com.edwardstock.leveldb.exception.LevelDBNoTypeAdapterException
+import kotlin.reflect.KClass
 
-internal class LevelDBWriterImpl(private val db: LevelDB) : LevelDBReaderImpl(db), LevelDBWriter {
+internal class LevelDBOpsImpl(private val db: LevelDB) : LevelDBOps {
+    override val config = db.config
+
+    override fun get(key: ByteArray, snapshot: Snapshot?): ByteArray? = db[key, snapshot]
+
+    @Throws(LevelDBNoTypeAdapterException::class)
+    inline fun <reified T : Any> getAny(key: String): T? =
+        getString(key)?.let { config.convertT<T>(key, it) }
+
+    override fun getPropertyBytes(key: ByteArray): ByteArray? = db.getPropertyBytes(key)
+
+    override fun iterator(fillCache: Boolean, snapshot: Snapshot?): LevelDBIterator =
+        db.iterator(fillCache, snapshot)
+
+    override fun obtainSnapshot(): Snapshot = db.obtainSnapshot()
+
     override fun put(key: ByteArray, value: ByteArray?, sync: Boolean) {
         db.put(key, value, sync)
+    }
+
+    @Throws(LevelDBNoTypeAdapterException::class)
+    inline fun <reified T : Any> put(key: String, value: T?) {
+        value?.let { put(key, config.convertFromT(value)) } ?: del(key)
     }
 
     override fun write(writeBatch: WriteBatch, sync: Boolean) {
@@ -26,10 +49,7 @@ internal class LevelDBWriterImpl(private val db: LevelDB) : LevelDBReaderImpl(db
         db.withBatch(batch, sync, block)
     }
 
-    @Throws(LevelDBNoTypeAdapterException::class)
-    inline fun <reified T : Any> put(key: String, value: T?) {
-        value?.let {
-            put(key, config.convertFromT(value))
-        } ?: del(key)
+    override fun <T : Any> put(key: String, value: T?, clazz: KClass<T>) {
+        value?.let { put(key, config.convertFromT(value, clazz)) } ?: del(key)
     }
 }

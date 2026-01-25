@@ -40,8 +40,8 @@ class LevelDBAdapterOpsTest {
     @Test
     fun `writer and reader use adapters with KClass`() {
         val (db, adapter) = newDb()
-        val writer = LevelDBWriterImpl(db)
-        val reader = LevelDBReaderImpl(db)
+        val writer = LevelDBOpsImpl(db)
+        val reader = LevelDBOpsImpl(db)
 
         writer.put("int", 123, Int::class)
         val result = reader.get("int", Int::class)
@@ -55,8 +55,8 @@ class LevelDBAdapterOpsTest {
     @Test
     fun `reader throws on missing adapter for existing value`() {
         val (db) = newDb()
-        val writer = LevelDBWriterImpl(db)
-        val reader = LevelDBReaderImpl(db)
+        val writer = LevelDBOpsImpl(db)
+        val reader = LevelDBOpsImpl(db)
 
         writer.put("value", "42")
 
@@ -69,8 +69,8 @@ class LevelDBAdapterOpsTest {
     @Test
     fun `writer and reader reified helpers use adapters`() {
         val (db, adapter) = newDb()
-        val writer = LevelDBWriterImpl(db)
-        val reader = LevelDBReaderImpl(db)
+        val writer = LevelDBOpsImpl(db)
+        val reader = LevelDBOpsImpl(db)
 
         writer.put("int", 7)
         assertEquals(123, reader.getAny<Int>("int"))

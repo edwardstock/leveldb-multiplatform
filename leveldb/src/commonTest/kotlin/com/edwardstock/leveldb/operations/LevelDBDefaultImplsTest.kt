@@ -32,8 +32,8 @@ class LevelDBDefaultImplsTest {
     @Test
     fun `reader default overloads resolve and iterate`() {
         val db = newDb()
-        val writer: LevelDBWriter = LevelDBWriterImpl(db)
-        val reader: LevelDBReader = LevelDBReaderImpl(db)
+        val writer: LevelDBOps = LevelDBOpsImpl(db)
+        val reader: LevelDBOps = LevelDBOpsImpl(db)
 
         writer.put("a", "1")
         writer.put("b", "2")
@@ -67,8 +67,8 @@ class LevelDBDefaultImplsTest {
     @Test
     fun `writer default overloads forward correctly`() {
         val db = newDb()
-        val writer: LevelDBWriter = LevelDBWriterImpl(db)
-        val reader: LevelDBReader = LevelDBReaderImpl(db)
+        val writer: LevelDBOps = LevelDBOpsImpl(db)
+        val reader: LevelDBOps = LevelDBOpsImpl(db)
 
         writer.put("a", "1")
         writer.put("b", byteArrayOf(2))

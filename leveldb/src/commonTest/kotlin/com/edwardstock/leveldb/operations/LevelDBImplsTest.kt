@@ -14,8 +14,8 @@ class LevelDBImplsTest {
         val path = DatabaseTestCase.createRandomDbPath()
         val db = LevelDB.open(path.toString()) { createIfMissing = true }
 
-        val reader = LevelDBReaderImpl(db)
-        val writer = LevelDBWriterImpl(db)
+        val reader = LevelDBOpsImpl(db)
+        val writer = LevelDBOpsImpl(db)
 
         writer.put(byteArrayOf(1), byteArrayOf(2), sync = false)
         assertEquals(2, reader.get(byteArrayOf(1))?.first()?.toInt())
