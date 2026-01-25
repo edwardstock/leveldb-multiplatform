@@ -20,21 +20,25 @@ void checkStatusOrThrow(JNIEnv* env, const cleveldb_status& status, const char* 
         return;
     }
 
+  auto safeThrow = [&](const char *clazz, const char *defaultMsg) {
+    jclass cls = env->FindClass(clazz);
+    if (cls == nullptr) {
+      jclass rte = env->FindClass("java/lang/RuntimeException");
+      if (rte != nullptr) {
+        env->ThrowNew(rte, msg ? msg : defaultMsg);
+      }
+      return;
+    }
+    env->ThrowNew(cls, msg ? msg : defaultMsg);
+  };
+
     if (status == LDB_IO_ERROR) {
-        jclass ioExceptionClass = env->FindClass("com/edwardstock/leveldb/exception/LevelDBIOException");
-
-        env->ThrowNew(ioExceptionClass, msg ? msg : "IO Error occurred");
+      safeThrow("com/edwardstock/leveldb/exception/LevelDBIOException", "IO Error occurred");
     } else if (status == LDB_CORRUPTED_DATA) {
-        jclass corruptionExceptionClass = env->FindClass("com/edwardstock/leveldb/exception/LevelDBCorruptionException");
-
-        env->ThrowNew(corruptionExceptionClass, msg ? msg : "Corrupted data encountered");
+      safeThrow("com/edwardstock/leveldb/exception/LevelDBCorruptionException", "Corrupted data encountered");
     } else if (status == LDB_NOT_FOUND) {
-        jclass notFoundExceptionClass = env->FindClass("com/edwardstock/leveldb/exception/LevelDBNotFoundException");
-
-        env->ThrowNew(notFoundExceptionClass, msg ? msg : "Requested key not found");
+      safeThrow("com/edwardstock/leveldb/exception/LevelDBNotFoundException", "Requested key not found");
     } else {
-        jclass exceptionClass = env->FindClass("com/edwardstock/leveldb/exception/LevelDBException");
-
         const char* message;
         if (status == LDB_UNKNOWN_ERROR) {
             message = "Unknown error";
@@ -50,7 +54,7 @@ void checkStatusOrThrow(JNIEnv* env, const cleveldb_status& status, const char* 
             message = "Unrecognized error";
         }
 
-        env->ThrowNew(exceptionClass, msg ? msg : message);
+      safeThrow("com/edwardstock/leveldb/exception/LevelDBException", message);
     }
 }
 
@@ -136,8 +140,12 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbRepair(JNIEnv* env, jo
     checkStatusOrThrow(env, leveldb_repair(nativePath));
 }
 
-jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchCreate(JNIEnv*, jobject) {
+jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchCreate(JNIEnv *env, jobject) {
     ndb_batch_holder* batch = leveldb_batch_create();
+  if (batch == nullptr) {
+    checkStatusOrThrow(env, LDB_MEMORY_ERROR, "Failed to create write batch");
+    return 0L;
+  }
     return reinterpret_cast<jlong>(batch);
 }
 
@@ -150,6 +158,9 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchClose(JNIEnv*, jobj
 }
 
 void Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchDelete(JNIEnv* env, jobject, jlong handle, jbyteArray key) {
+  if (!checkHandleOrThrow(handle, env)) {
+    return;
+  }
     ScopedByteArrayElements keyData(env, key);
     if (!keyData.isValid()) {
         checkStatusOrThrow(env, LDB_MEMORY_ERROR, "Failed to get key data");
@@ -167,6 +178,9 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchPut(
     jbyteArray key,
     jbyteArray value
 ) {
+  if (!checkHandleOrThrow(handle, env)) {
+    return;
+  }
     ScopedByteArrayElements keyData(env, key);
     if (!keyData.isValid()) {
         checkStatusOrThrow(env, LDB_MEMORY_ERROR, "Failed to get key data");
@@ -375,6 +389,11 @@ jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbSnapshot(
 
     ndb_snapshot_holder* snapshot = leveldb_snapshot(db);
 
+  if (snapshot == nullptr) {
+    checkStatusOrThrow(env, LDB_MEMORY_ERROR, "Failed to create snapshot");
+    return 0L;
+  }
+
     return reinterpret_cast<jlong>(snapshot);
 }
 
@@ -392,6 +411,11 @@ jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbIterate(
     auto* snapshot = reinterpret_cast<ndb_snapshot_holder *>(snapshotHandle);
 
     ndb_iterator_holder* iterator = leveldb_iterate(db, fillCache == JNI_TRUE, snapshot);
+
+  if (!iterator) {
+    checkStatusOrThrow(env, LDB_MEMORY_ERROR, "Failed to create iterator");
+    return 0L;
+  }
 
     return reinterpret_cast<jlong>(iterator);
 }
@@ -422,7 +446,14 @@ jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbGetProperty(
         &buffer,
         &buffer_len
     );
+  if (rc == LDB_NOT_FOUND) {
+    if (buffer != nullptr) {
+      leveldb_free_buffer(buffer);
+    }
+    return nullptr;
+  }
     checkStatusOrThrow(env, rc);
+
   if (hasPendingException(env)) {
     return nullptr;
   }
