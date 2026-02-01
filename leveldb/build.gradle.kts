@@ -78,6 +78,13 @@ kotlin {
         namespace = group as String
         withSourcesJar(true)
 
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file("consumer-rules.pro")
+            }
+        }
+
         compilations.configureEach {
             compileTaskProvider.configure {
                 compilerOptions {
