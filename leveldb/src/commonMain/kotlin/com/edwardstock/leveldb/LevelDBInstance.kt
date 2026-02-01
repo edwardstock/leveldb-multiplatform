@@ -78,7 +78,7 @@ open class LevelDBInstance internal constructor(
         internal fun stateFor(path: Path, fs: FileSystem = FileSystem.SYSTEM): LevelDBEntryState =
             indexLock.withLock {
                 val canonicalPath = canonicalize(fs, path)
-                val key = canonicalPath + fsIdentity(fs).hashCode().toString()
+                val key = "${canonicalPath}\u0000${fsIdentity(fs).hashCode()}"
                 val existing = entries[key]
                 if (existing != null) {
                     checkSameFileSystem(existing, fs)
