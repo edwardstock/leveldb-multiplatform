@@ -1,8 +1,9 @@
 package com.edwardstock.leveldb.iosExample
 
 import com.edwardstock.leveldb.LevelDBInstance
+import com.edwardstock.leveldb.api.del
 import com.edwardstock.leveldb.api.forEachAll
-import com.edwardstock.leveldb.config.LevelDBDriverConfig
+import com.edwardstock.leveldb.api.putString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,10 +15,8 @@ import kotlinx.coroutines.launch
 
 internal class LevelDbStore : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val db = LevelDBInstance(
-        path = defaultDbPath(),
-        driver = LevelDBDriverConfig(createIfMissing = true),
-    )
+    private val db = LevelDBInstance.builder(path = defaultDbPath())
+        .build()
 
     private val _items = MutableStateFlow<List<TextItem>>(emptyList())
     val items: StateFlow<List<TextItem>> = _items.asStateFlow()
@@ -35,20 +34,16 @@ internal class LevelDbStore : AutoCloseable {
         scope.launch {
             val id = nowMillis()
             db.use {
-                write {
-                    putString(id.toString(), trimmed)
-                }
+                putString(id.toString(), trimmed)
             }
-            _items.value = _items.value + TextItem(id, trimmed)
+            _items.value += TextItem(id, trimmed)
         }
     }
 
     fun removeItem(item: TextItem) {
         scope.launch {
             db.use {
-                write {
-                    del(item.id.toString())
-                }
+                del(item.id.toString())
             }
             _items.value = _items.value.filterNot { it.id == item.id }
         }
@@ -57,11 +52,9 @@ internal class LevelDbStore : AutoCloseable {
     private suspend fun reload() {
         val loaded = mutableListOf<TextItem>()
         db.use {
-            read {
-                forEachAll { key, value ->
-                    val id = key.toLongOrNull() ?: return@forEachAll
-                    loaded.add(TextItem(id, value))
-                }
+            forEachAll { entry ->
+                val id = entry.keyString().toLongOrNull() ?: return@forEachAll
+                loaded.add(TextItem(id, entry.valueString()))
             }
         }
         _items.value = loaded.sortedBy { it.id }

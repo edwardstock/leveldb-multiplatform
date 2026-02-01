@@ -1,7 +1,7 @@
 [versions]
 agp = "9.0.0"
 kotlin = "2.3.0"
-ksp = "2.3.2"
+ksp = "2.3.5"
 kotlin-coroutines = "1.10.2"
 kotlin-atomicfu = "0.31.0"
 
@@ -12,7 +12,7 @@ android-minSdk = "24"
 android-compileSdk = "36"
 
 android-lifecycle = "2.10.0"
-android-activityCompose = "1.12.2"
+android-activityCompose = "1.12.3"
 
 compose-plugin = "1.10.0"
 compose-bom = "2026.01.00"
@@ -55,6 +55,11 @@ android-compose-material3 = { group = "androidx.compose.material3", name = "mate
 android-compose-material3WindowSizeClass = { module = "androidx.compose.material3:material3-window-size-class" }
 android-compose-materialIcons-core = { module = "androidx.compose.material:material-icons-core", version = "1.7.8" }
 android-compose-materialIcons-extended = { module = "androidx.compose.material:material-icons-extended", version = "1.7.8" }
+
+compose-kmp-runtime = { module = "org.jetbrains.compose.runtime:runtime", version = "1.10.0" }
+compose-kmp-foundation = { module = "org.jetbrains.compose.foundation:foundation", version = "1.10.0" }
+compose-kmp-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.9.0" }
+compose-kmp-ui = { module = "org.jetbrains.compose.ui:ui", version = "1.10.0" }
 
 
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }

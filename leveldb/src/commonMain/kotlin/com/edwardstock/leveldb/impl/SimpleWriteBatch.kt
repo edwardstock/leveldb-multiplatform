@@ -2,6 +2,7 @@ package com.edwardstock.leveldb.impl
 
 import com.edwardstock.leveldb.api.WriteBatch
 import com.edwardstock.leveldb.config.LevelDBInstanceConfig
+import com.edwardstock.leveldb.internal.BytesHelper.lexicographicCompareTo
 
 /*
  * Original author: Stojan Dimitrovski <sdimitrovski@gmail.com>
@@ -56,11 +57,11 @@ class SimpleWriteBatch(
     /**
      * A simple implementation of [com.edwardstock.leveldb.WriteBatch.Operation]
      */
-    private data class Operation private constructor(
+    private class Operation private constructor(
         private val type: Int,
         private val key: ByteArray,
         private val value: ByteArray?,
-    ) : WriteBatch.Operation {
+    ) : WriteBatch.Operation, Comparable<Operation> {
 
         override fun key(): ByteArray = key
         override fun value(): ByteArray? = value
@@ -86,6 +87,10 @@ class SimpleWriteBatch(
             result = 31 * result + key.contentHashCode()
             result = 31 * result + (value?.contentHashCode() ?: 0)
             return result
+        }
+
+        override fun compareTo(other: Operation): Int {
+            return key.lexicographicCompareTo(other.key)
         }
 
         override val isPut: Boolean

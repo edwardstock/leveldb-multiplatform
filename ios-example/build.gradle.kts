@@ -33,10 +33,10 @@ kotlin {
                 implementation(libs.kotlin.coroutines)
                 implementation(libs.okio)
 
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.material3)
-                implementation(compose.ui)
+                implementation(libs.compose.kmp.runtime)
+                implementation(libs.compose.kmp.foundation)
+                implementation(libs.compose.kmp.material3)
+                implementation(libs.compose.kmp.ui)
             }
         }
         val commonTest by getting {
