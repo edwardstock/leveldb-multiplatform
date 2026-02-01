@@ -122,7 +122,6 @@ kotlin {
         binaries.all {}
     }
 
-
     sourceSets {
         commonMain {
             dependencies {
@@ -227,8 +226,9 @@ tasks.matching { it.name in setOf("jvmJar", "jar") }.configureEach {
     dependsOn("jvmProcessResources")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.withType<AbstractTestTask>().configureEach {
     dependsOn(prepareJvmJniLibs)
+    reports.junitXml.required.set(false)
 }
 
 kover {
