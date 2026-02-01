@@ -1,8 +1,8 @@
 package com.edwardstock.leveldb.iosExample
 
-import com.edwardstock.leveldb.LevelDBConfig
 import com.edwardstock.leveldb.LevelDBInstance
-import com.edwardstock.leveldb.utils.forEachAll
+import com.edwardstock.leveldb.api.forEachAll
+import com.edwardstock.leveldb.config.LevelDBDriverConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,7 +16,7 @@ internal class LevelDbStore : AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val db = LevelDBInstance(
         path = defaultDbPath(),
-        config = LevelDBConfig(createIfMissing = true),
+        driver = LevelDBDriverConfig(createIfMissing = true),
     )
 
     private val _items = MutableStateFlow<List<TextItem>>(emptyList())
@@ -36,7 +36,7 @@ internal class LevelDbStore : AutoCloseable {
             val id = nowMillis()
             db.use {
                 write {
-                    put(id.toString(), trimmed)
+                    putString(id.toString(), trimmed)
                 }
             }
             _items.value = _items.value + TextItem(id, trimmed)

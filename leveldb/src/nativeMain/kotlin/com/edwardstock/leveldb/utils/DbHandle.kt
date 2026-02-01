@@ -11,6 +11,7 @@ import cnames.structs.ndb_batch_holder
 import cnames.structs.ndb_holder
 import cnames.structs.ndb_iterator_holder
 import cnames.structs.ndb_snapshot_holder
+import com.edwardstock.leveldb.internal.DbHandle
 import com.edwardstock.leveldb.interop.leveldb_batch_close
 import com.edwardstock.leveldb.interop.leveldb_close
 import com.edwardstock.leveldb.interop.leveldb_iter_close
@@ -43,7 +44,7 @@ class NativeDbBatchHandle internal constructor(
 }
 
 class NativeDbSnapshotHandle internal constructor(
-    private val dbHandle: com.edwardstock.leveldb.DbHandle,
+    private val dbHandle: DbHandle,
     ptr: CPointer<ndb_snapshot_holder>?,
 ) : NativeHandle<ndb_snapshot_holder>(ptr) {
 

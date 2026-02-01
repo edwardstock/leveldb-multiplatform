@@ -72,11 +72,19 @@ kotlin {
     macosX64()
     mingwX64()
 
-    android {
+    androidLibrary {
         minSdk { version = release(libs.versions.android.minSdk.get().toInt()) }
         compileSdk { version = release(libs.versions.android.compileSdk.get().toInt()) }
         namespace = group as String
         withSourcesJar(true)
+
+        compilations.configureEach {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_17)
+                }
+            }
+        }
     }
 
     iosSimulatorArm64()
@@ -115,6 +123,7 @@ kotlin {
                 implementation(libs.kotlin.coroutines)
                 implementation(libs.kotlin.atomicfu)
                 implementation(libs.okio)
+                implementation(libs.okio.fakeFileSystem)
             }
         }
 

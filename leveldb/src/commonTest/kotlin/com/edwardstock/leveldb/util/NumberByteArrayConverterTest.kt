@@ -1,6 +1,6 @@
 package com.edwardstock.leveldb.util
 
-import com.edwardstock.leveldb.utils.NumberByteArrayConverter
+import com.edwardstock.leveldb.internal.NumberByteArrayConverter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

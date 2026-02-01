@@ -5,7 +5,7 @@
 
 package com.edwardstock.leveldb
 
-import com.edwardstock.leveldb.utils.BytesHelper
+import com.edwardstock.leveldb.internal.BytesHelper
 
 fun assertEquals(expected: ByteArray?, actual: ByteArray?): Boolean {
     return when {

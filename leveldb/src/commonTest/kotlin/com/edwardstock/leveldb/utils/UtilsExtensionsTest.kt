@@ -1,9 +1,14 @@
 package com.edwardstock.leveldb.utils
 
-import com.edwardstock.leveldb.LevelDB
-import com.edwardstock.leveldb.LevelDBConfig
 import com.edwardstock.leveldb.LevelDBInstance
+import com.edwardstock.leveldb.api.LevelDB
+import com.edwardstock.leveldb.api.forEachAll
+import com.edwardstock.leveldb.api.forEachAllKeyString
+import com.edwardstock.leveldb.api.forEachAllValueString
+import com.edwardstock.leveldb.api.open
+import com.edwardstock.leveldb.api.putString
 import com.edwardstock.leveldb.common.DatabaseTestCase
+import com.edwardstock.leveldb.config.LevelDBDriverConfig
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -11,11 +16,14 @@ class UtilsExtensionsTest {
     @Test
     fun `forEach extensions iterate keys and values`() = kotlinx.coroutines.test.runTest {
         val path = DatabaseTestCase.createRandomDbPath()
-        val instance = LevelDBInstance(path, LevelDBConfig(createIfMissing = true))
+        val instance = LevelDBInstance.builder(path)
+            .scope(this)
+            .driver { LevelDBDriverConfig(createIfMissing = true) }
+            .build()
 
         instance.use {
-            put("a", "1")
-            put("b", "2")
+            putString("a", "1")
+            putString("b", "2")
         }
 
         val readerAll = mutableListOf<Pair<String, String>>()
@@ -23,19 +31,19 @@ class UtilsExtensionsTest {
         val readerValues = mutableListOf<String>()
 
         instance.use {
-            forEachAll { k, v -> readerAll += k to v }
-            forEachKeys { readerKeys += it }
-            forEachValues { readerValues += it }
+            forEachAll { readerAll += it.keyString() to it.valueString() }
+            forEachAllKeyString { readerKeys += it }
+            forEachAllValueString { readerValues += it }
         }
 
-        val db = LevelDB.open(path.toString()) { createIfMissing = true }
+        val db = LevelDB.open(path.toString())
         val dbAll = mutableListOf<Pair<String, String>>()
         val dbKeys = mutableListOf<String>()
         val dbValues = mutableListOf<String>()
 
-        db.forEachAll { k, v -> dbAll += k to v }
-        db.forEachKeys { dbKeys += it }
-        db.forEachValues { dbValues += it }
+        db.forEachAll { dbAll += it.keyString() to it.valueString() }
+        db.forEachAllKeyString { dbKeys += it }
+        db.forEachAllValueString { dbValues += it }
         db.close()
 
         assertEquals(setOf("a", "b"), readerKeys.toSet())

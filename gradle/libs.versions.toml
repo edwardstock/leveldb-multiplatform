@@ -3,7 +3,7 @@ agp = "9.0.0"
 kotlin = "2.3.0"
 ksp = "2.3.2"
 kotlin-coroutines = "1.10.2"
-kotlin-atomicfu = "0.30.0"
+kotlin-atomicfu = "0.31.0"
 
 ndkVersion = "29.0.14206865"
 cmakeVersion = "4.1.2"
@@ -58,6 +58,7 @@ android-compose-materialIcons-extended = { module = "androidx.compose.material:m
 
 
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+okio-fakeFileSystem = { module = "com.squareup.okio:okio-fakefilesystem", version.ref = "okio" }
 
 di-hilt-core = { module = "com.google.dagger:hilt-android", version.ref = "hilt-base" }
 di-hilt-daggerCompiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt-base" }

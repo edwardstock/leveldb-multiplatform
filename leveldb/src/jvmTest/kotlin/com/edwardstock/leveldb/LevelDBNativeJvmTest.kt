@@ -1,5 +1,10 @@
 package com.edwardstock.leveldb
 
+import com.edwardstock.leveldb.internal.LevelDBNativeProvider
+import com.edwardstock.leveldb.internal.NULL_DB_BATCH_HANDLE
+import com.edwardstock.leveldb.internal.NULL_DB_HANDLE
+import com.edwardstock.leveldb.internal.NULL_DB_ITERATOR_HANDLE
+import com.edwardstock.leveldb.internal.NULL_DB_SNAPSHOT_HANDLE
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame

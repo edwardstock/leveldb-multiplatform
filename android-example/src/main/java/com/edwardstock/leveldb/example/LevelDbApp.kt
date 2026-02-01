@@ -1,7 +1,7 @@
 package com.edwardstock.leveldb.example
 
 import android.app.Application
-import com.edwardstock.leveldb.LevelDB
+import com.edwardstock.leveldb.api.LevelDB
 import com.edwardstock.leveldb.loadNative
 import dagger.hilt.android.HiltAndroidApp
 

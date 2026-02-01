@@ -13,7 +13,7 @@ extern "C" {
  * Method:    dbOpen
  * Signature: (ZZIIILjava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbOpen
+JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbOpen
         (JNIEnv *, jobject, jboolean, jboolean, jint, jint, jint, jstring);
 
 /*
@@ -21,7 +21,7 @@ JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbOpe
  * Method:    dbDestroy
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbDestroy
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbDestroy
 (JNIEnv *, jobject, jstring);
 
 /*
@@ -29,7 +29,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbDest
  * Method:    dbRepair
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbRepair
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbRepair
 (JNIEnv *, jobject, jstring);
 
 /*
@@ -37,7 +37,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbRepa
  * Method:    batchCreate
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchCreate
+JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_batchCreate
         (JNIEnv *, jobject);
 
 /*
@@ -45,7 +45,7 @@ JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_batch
  * Method:    batchClose
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchClose
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_batchClose
 (JNIEnv *, jobject, jlong);
 
 /*
@@ -53,7 +53,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchC
  * Method:    batchDelete
  * Signature: (J[B)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchDelete
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_batchDelete
 (JNIEnv *, jobject, jlong, jbyteArray);
 
 /*
@@ -61,7 +61,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchD
  * Method:    batchPut
  * Signature: (J[B[B)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchPut
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_batchPut
 (JNIEnv *, jobject, jlong, jbyteArray, jbyteArray);
 
 /*
@@ -69,7 +69,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchP
  * Method:    iteratorValue
  * Signature: (J)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorValue
+JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorValue
         (JNIEnv *, jobject, jlong);
 
 /*
@@ -77,7 +77,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_
  * Method:    iteratorKey
  * Signature: (J)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorKey
+JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorKey
         (JNIEnv *, jobject, jlong);
 
 /*
@@ -85,7 +85,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_
  * Method:    iteratorPrev
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorPrev
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorPrev
 (JNIEnv *, jobject, jlong);
 
 /*
@@ -93,7 +93,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iterat
  * Method:    iteratorNext
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorNext
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorNext
 (JNIEnv *, jobject, jlong);
 
 /*
@@ -101,7 +101,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iterat
  * Method:    iteratorSeekToLast
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorSeekToLast
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorSeekToLast
 (JNIEnv *, jobject, jlong);
 
 /*
@@ -109,7 +109,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iterat
  * Method:    iteratorSeekToFirst
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorSeekToFirst
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorSeekToFirst
 (JNIEnv *, jobject, jlong);
 
 /*
@@ -117,7 +117,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iterat
  * Method:    iteratorSeek
  * Signature: (J[B)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorSeek
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorSeek
 (JNIEnv *, jobject, jlong, jbyteArray);
 
 /*
@@ -125,7 +125,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iterat
  * Method:    iteratorValidate
  * Signature: (J)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorValidate
+JNIEXPORT jboolean JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorValidate
         (JNIEnv *, jobject, jlong);
 
 /*
@@ -133,7 +133,7 @@ JNIEXPORT jboolean JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_it
  * Method:    iteratorClose
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorClose
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorClose
 (JNIEnv *, jobject, jlong);
 
 /*
@@ -141,7 +141,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_iterat
  * Method:    dbReleaseSnapshot
  * Signature: (JJ)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbReleaseSnapshot
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbReleaseSnapshot
 (JNIEnv *, jobject, jlong, jlong);
 
 /*
@@ -149,7 +149,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbRele
  * Method:    dbSnapshot
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbSnapshot
+JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbSnapshot
         (JNIEnv *, jobject, jlong);
 
 /*
@@ -157,7 +157,7 @@ JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbSna
  * Method:    dbIterate
  * Signature: (JZLjava/lang/Long;)J
  */
-JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbIterate
+JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbIterate
         (JNIEnv *, jobject, jlong, jboolean, jlong);
 
 /*
@@ -165,7 +165,7 @@ JNIEXPORT jlong JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbIte
  * Method:    dbGetProperty
  * Signature: (J[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbGetProperty
+JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbGetProperty
         (JNIEnv *, jobject, jlong, jbyteArray);
 
 /*
@@ -173,7 +173,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_
  * Method:    dbGet
  * Signature: (J[BLjava/lang/Long;)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbGet
+JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbGet
         (JNIEnv *, jobject, jlong, jbyteArray, jlong);
 
 /*
@@ -181,7 +181,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_
  * Method:    dbWrite
  * Signature: (JZJ)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbWrite
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbWrite
 (JNIEnv *, jobject, jlong, jboolean, jlong);
 
 /*
@@ -189,7 +189,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbWrit
  * Method:    dbDelete
  * Signature: (JZ[B)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbDelete
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbDelete
 (JNIEnv *, jobject, jlong, jboolean, jbyteArray);
 
 /*
@@ -197,7 +197,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbDele
  * Method:    dbPut
  * Signature: (JZ[B[B)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbPut
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbPut
 (JNIEnv *, jobject, jlong, jboolean, jbyteArray, jbyteArray);
 
 /*
@@ -205,7 +205,7 @@ JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbPut
  * Method:    dbClose
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbClose
+JNIEXPORT void JNICALL Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbClose
 (JNIEnv *, jobject, jlong);
 
 #ifdef __cplusplus

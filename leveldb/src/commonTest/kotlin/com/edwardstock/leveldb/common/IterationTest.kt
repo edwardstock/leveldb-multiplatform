@@ -2,8 +2,8 @@ package com.edwardstock.leveldb.common
 
 import com.edwardstock.leveldb.exception.LevelDBClosedException
 import com.edwardstock.leveldb.exception.LevelDBIteratorNotValidException
-import com.edwardstock.leveldb.implementation.SimpleWriteBatch
-import com.edwardstock.leveldb.utils.BytesHelper.lexicographicCompare
+import com.edwardstock.leveldb.impl.SimpleWriteBatch
+import com.edwardstock.leveldb.internal.BytesHelper.lexicographicCompare
 import kotlin.experimental.and
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -57,7 +57,7 @@ abstract class IterationTest : DatabaseTestCase() {
         db.write(wb, true)
 
         var iterator = db.iterator()
-        db.put(byteArrayOf(0, 0, 0), byteArrayOf(0))
+        db.putBytes(byteArrayOf(0, 0, 0), byteArrayOf(0))
         iterator.seekToFirst()
         var i: Byte = 1
         while (iterator.isValid) {

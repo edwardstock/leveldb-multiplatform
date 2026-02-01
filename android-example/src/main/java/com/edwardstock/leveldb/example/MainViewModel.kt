@@ -3,7 +3,9 @@ package com.edwardstock.leveldb.example
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edwardstock.leveldb.LevelDBInstance
-import com.edwardstock.leveldb.utils.forEachAll
+import com.edwardstock.leveldb.api.del
+import com.edwardstock.leveldb.api.forEachAllValueT
+import com.edwardstock.leveldb.api.putValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,17 +28,14 @@ class MainViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             db.use {
-                read {
-                    val data = ArrayList<TextItem>()
-                    forEachAll { key, value ->
-                        val item = TextItem(value, key.toInt())
-                        data.add(item)
-                    }
-                    _state.update {
-                        it.copy(
-                            items = data
-                        )
-                    }
+                val data = ArrayList<TextItem>()
+                forEachAllValueT<TextItem> { value ->
+                    data.add(value)
+                }
+                _state.update {
+                    it.copy(
+                        items = data
+                    )
                 }
             }
         }
@@ -47,9 +46,7 @@ class MainViewModel @Inject constructor(
             val id = System.currentTimeMillis().toInt()
             val item = TextItem(text, id)
             db.use {
-                write {
-                    put(id.toString(), text)
-                }
+                putValue(id.toString(), item, TextItem::class)
             }
             _state.update {
                 it.copy(
@@ -62,9 +59,7 @@ class MainViewModel @Inject constructor(
     fun removeItem(item: TextItem) {
         viewModelScope.launch {
             db.use {
-                write {
-                    del(item.id.toString())
-                }
+                del(item.id.toString())
             }
             _state.update { oldState ->
                 oldState.copy(

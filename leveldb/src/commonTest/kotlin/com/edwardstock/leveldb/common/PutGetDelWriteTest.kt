@@ -1,8 +1,9 @@
 package com.edwardstock.leveldb.common
 
+import com.edwardstock.leveldb.api.get
 import com.edwardstock.leveldb.exception.LevelDBClosedException
-import com.edwardstock.leveldb.implementation.SimpleWriteBatch
-import com.edwardstock.leveldb.utils.BytesHelper.lexicographicCompare
+import com.edwardstock.leveldb.impl.SimpleWriteBatch
+import com.edwardstock.leveldb.internal.BytesHelper.lexicographicCompare
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -48,13 +49,13 @@ import kotlin.test.assertNull
     @Throws(Exception::class)
     fun testPut() {
         val db = obtainLevelDB()
-        db.put(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), true)
-        db.put(byteArrayOf(1, 2, 3, 4), byteArrayOf(1, 2, 3, 4), false)
-        db.put(byteArrayOf(1, 2, 3, 4, 5), null, false)
+        db.putBytes(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), true)
+        db.putBytes(byteArrayOf(1, 2, 3, 4), byteArrayOf(1, 2, 3, 4), false)
+        db.putBytes(byteArrayOf(1, 2, 3, 4, 5), null, false)
 
         db.close()
         assertFailsWith<LevelDBClosedException> {
-            db.put(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), false)
+            db.putBytes(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), false)
         }
     }
 
@@ -62,17 +63,17 @@ import kotlin.test.assertNull
     @Throws(Exception::class)
     fun testGet() {
         val db = obtainLevelDB()
-        db.put(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), false)
+        db.putBytes(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), false)
         var result = db[byteArrayOf(1, 2, 3)]
         assertNotNull(result)
         assertEquals(0, lexicographicCompare(byteArrayOf(1, 2, 3), result).toLong())
 
-        db.put(byteArrayOf(1, 2, 4), byteArrayOf(1, 2, 4), true)
+        db.putBytes(byteArrayOf(1, 2, 4), byteArrayOf(1, 2, 4), true)
         result = db[byteArrayOf(1, 2, 4)]
         assertNotNull(result)
         assertEquals(0, lexicographicCompare(byteArrayOf(1, 2, 4), result).toLong())
 
-        db.put(byteArrayOf(1, 2, 4), null, false)
+        db.putBytes(byteArrayOf(1, 2, 4), null, false)
         result = db[byteArrayOf(1, 2, 4)]
         assertNull(result)
 
@@ -87,11 +88,11 @@ import kotlin.test.assertNull
     @Throws(Exception::class)
     fun testDel() {
         val db = obtainLevelDB()
-        db.put(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), false)
+        db.putBytes(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), false)
         assertNotNull(db[byteArrayOf(1, 2, 3)])
         db.del(byteArrayOf(1, 2, 3), false)
         assertNull(db[byteArrayOf(1, 2, 3)])
-        db.put(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), false)
+        db.putBytes(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3), false)
         assertNotNull(db[byteArrayOf(1, 2, 3)])
         db.del(byteArrayOf(1, 2, 3), true)
         assertNull(db[byteArrayOf(1, 2, 3)])

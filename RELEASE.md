@@ -8,6 +8,10 @@
 - Native build overhaul: new CMake presets/layout, host-compatible build scripts, and refreshed prebuilt output structure.
 - JNI/native bindings reorganized with new `binding`, `cinterop`, and `shared` sources.
 - Updated LevelDB submodule and licensing cleanup (consolidated LICENSE and added third_party notices).
+- Added schema migration support (`LevelDBSchema`, `LevelDBMigration`) with safety policies (in-place, backup, staging) and manual/auto migration
+  controls.
+- Added lifecycle controls for shared instances (idle-delayed close strategy, exclusive path access) to manage native handles safely.
+- Introduced a dedicated adapter registry and new instance/driver config types to centralize adapters, logging, and LevelDB options.
 
 ## 1.0.2
 

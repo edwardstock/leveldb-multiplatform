@@ -1,7 +1,8 @@
 package com.edwardstock.leveldb.common
 
-import com.edwardstock.leveldb.exception.LevelDBClosedException
+import com.edwardstock.leveldb.api.get
 import com.edwardstock.leveldb.assertEquals
+import com.edwardstock.leveldb.exception.LevelDBClosedException
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -73,11 +74,11 @@ abstract class SnapshotTest : DatabaseTestCase() {
     @Throws(Exception::class)
     fun testGet() {
         val db = obtainLevelDB()
-        db.put(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3))
-        db.put(byteArrayOf(3, 4, 5), byteArrayOf(3, 4, 5))
+        db.putBytes(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3))
+        db.putBytes(byteArrayOf(3, 4, 5), byteArrayOf(3, 4, 5))
         val snapshotA = db.obtainSnapshot()
 
-        db.put(byteArrayOf(5, 6, 7), byteArrayOf(5, 6, 7))
+        db.putBytes(byteArrayOf(5, 6, 7), byteArrayOf(5, 6, 7))
         assertNotNull(db[byteArrayOf(5, 6, 7)])
 
         val snapshotB = db.obtainSnapshot()

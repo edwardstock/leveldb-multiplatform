@@ -1,5 +1,6 @@
 package com.edwardstock.leveldb
 
+import com.edwardstock.leveldb.api.LevelDB
 import kotlin.test.Test
 
 class LevelDBJvmUtilsTest {

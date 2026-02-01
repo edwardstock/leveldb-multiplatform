@@ -70,9 +70,7 @@ android {
     packaging {
         jniLibs.keepDebugSymbols += "**/*.so"
     }
-
 }
-
 
 dependencies {
     testImplementation(libs.test.junit)

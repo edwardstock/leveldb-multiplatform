@@ -1,8 +1,8 @@
 package com.edwardstock.leveldb.common
 
-import com.edwardstock.leveldb.LevelDB
+import com.edwardstock.leveldb.api.LevelDB
+import com.edwardstock.leveldb.api.open
 import com.edwardstock.leveldb.util.exists
-import com.edwardstock.leveldb.utils.open
 import okio.FileSystem
 import okio.Path
 import okio.SYSTEM
@@ -43,7 +43,8 @@ import kotlin.random.nextUInt
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
- */ abstract class DatabaseTestCase {
+ */
+abstract class DatabaseTestCase {
     companion object {
         fun createRandomDbPath(): Path {
             return FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "${Random.nextUInt()}.leveldb"
@@ -55,9 +56,7 @@ import kotlin.random.nextUInt
     }
 
     protected val db: LevelDB by lazy {
-        LevelDB.open(dbFile.toString()) {
-            createIfMissing = true
-        }
+        LevelDB.open(dbFile.toString())
     }
 
 

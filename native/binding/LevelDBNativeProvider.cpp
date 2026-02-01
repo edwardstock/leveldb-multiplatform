@@ -71,7 +71,7 @@ static bool checkHandleOrThrow(jlong handle, JNIEnv* env) {
     return true;
 }
 
-jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbOpen(
+jlong Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbOpen(
     JNIEnv* env,
     jobject,
     jboolean createIfMissing,
@@ -120,7 +120,7 @@ jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbOpen(
     return reinterpret_cast<jlong>(handle);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbDestroy(JNIEnv* env, jobject, jstring path) {
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbDestroy(JNIEnv *env, jobject, jstring path) {
     ScopedUtfChars nativePath(env, path);
     if (!nativePath.isValid()) {
         checkStatusOrThrow(env, LDB_MEMORY_ERROR, "Failed to get native path");
@@ -130,7 +130,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbDestroy(JNIEnv* env, j
     checkStatusOrThrow(env, leveldb_destroy(nativePath));
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbRepair(JNIEnv* env, jobject, jstring path) {
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbRepair(JNIEnv *env, jobject, jstring path) {
     ScopedUtfChars nativePath(env, path);
     if (!nativePath.isValid()) {
         checkStatusOrThrow(env, LDB_MEMORY_ERROR, "Failed to get native path");
@@ -140,7 +140,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbRepair(JNIEnv* env, jo
     checkStatusOrThrow(env, leveldb_repair(nativePath));
 }
 
-jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchCreate(JNIEnv *env, jobject) {
+jlong Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_batchCreate(JNIEnv *env, jobject) {
     ndb_batch_holder* batch = leveldb_batch_create();
   if (batch == nullptr) {
     checkStatusOrThrow(env, LDB_MEMORY_ERROR, "Failed to create write batch");
@@ -149,7 +149,7 @@ jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchCreate(JNIEnv *env
     return reinterpret_cast<jlong>(batch);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchClose(JNIEnv*, jobject, jlong holder) {
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_batchClose(JNIEnv *, jobject, jlong holder) {
     if (holder == 0L) {
         return;
     }
@@ -157,7 +157,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchClose(JNIEnv*, jobj
     leveldb_batch_close(batch);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchDelete(JNIEnv* env, jobject, jlong handle, jbyteArray key) {
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_batchDelete(JNIEnv *env, jobject, jlong handle, jbyteArray key) {
   if (!checkHandleOrThrow(handle, env)) {
     return;
   }
@@ -171,7 +171,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchDelete(JNIEnv* env,
     leveldb_batch_delete(batch, keyData.bytes(), keyData.usize());
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchPut(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_batchPut(
     JNIEnv* env,
     jobject,
     jlong handle,
@@ -202,7 +202,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_batchPut(
     );
 }
 
-jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorValue(
+jbyteArray Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorValue(
     JNIEnv* env,
     jobject,
     jlong handle
@@ -232,7 +232,7 @@ jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorValue(
     return result;
 }
 
-jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorKey(
+jbyteArray Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorKey(
     JNIEnv* env,
     jobject,
     jlong handle
@@ -262,7 +262,7 @@ jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorKey(
     return result;
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorPrev(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorPrev(
     JNIEnv* env,
     jobject,
     jlong handle
@@ -275,7 +275,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorPrev(
     leveldb_iter_prev(iterator);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorNext(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorNext(
     JNIEnv* env,
     jobject,
     jlong handle
@@ -288,7 +288,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorNext(
     leveldb_iter_next(iterator);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorSeekToLast(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorSeekToLast(
     JNIEnv* env,
     jobject,
     jlong handle
@@ -301,7 +301,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorSeekToLast(
     leveldb_iter_seek_to_last(iterator);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorSeekToFirst(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorSeekToFirst(
     JNIEnv* env,
     jobject,
     jlong handle
@@ -314,7 +314,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorSeekToFirst(
     leveldb_iter_seek_to_first(iterator);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorSeek(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorSeek(
     JNIEnv* env,
     jobject,
     jlong handle,
@@ -333,7 +333,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorSeek(
     leveldb_iter_seek(iterator, keyData.bytes(), keyData.usize());
 }
 
-jboolean Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorValidate(
+jboolean Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorValidate(
     JNIEnv* env,
     jobject,
     jlong handle
@@ -346,7 +346,7 @@ jboolean Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorValidate(
     return leveldb_iter_valid(iterator) ? JNI_TRUE : JNI_FALSE;
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorClose(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_iteratorClose(
     JNIEnv* env,
     jobject,
     jlong handle
@@ -359,7 +359,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_iteratorClose(
     leveldb_iter_close(iterator);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbReleaseSnapshot(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbReleaseSnapshot(
     JNIEnv* env,
     jobject,
     jlong dbHandle,
@@ -377,7 +377,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbReleaseSnapshot(
     leveldb_release_snapshot(db, snapshot);
 }
 
-jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbSnapshot(
+jlong Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbSnapshot(
     JNIEnv* env,
     jobject,
     jlong dbHandle
@@ -397,7 +397,7 @@ jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbSnapshot(
     return reinterpret_cast<jlong>(snapshot);
 }
 
-jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbIterate(
+jlong Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbIterate(
     JNIEnv* env,
     jobject,
     jlong dbHandle,
@@ -420,7 +420,7 @@ jlong Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbIterate(
     return reinterpret_cast<jlong>(iterator);
 }
 
-jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbGetProperty(
+jbyteArray Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbGetProperty(
     JNIEnv* env,
     jobject,
     jlong handle,
@@ -469,7 +469,7 @@ jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbGetProperty(
     return result;
 }
 
-jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbGet(
+jbyteArray Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbGet(
     JNIEnv* env,
     jobject,
     jlong dbHandle,
@@ -511,7 +511,7 @@ jbyteArray Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbGet(
     return result;
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbWrite(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbWrite(
     JNIEnv* env,
     jobject,
     jlong dbHandle,
@@ -531,7 +531,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbWrite(
     checkStatusOrThrow(env, rc);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbDelete(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbDelete(
     JNIEnv* env,
     jobject,
     jlong dbHandle,
@@ -557,7 +557,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbDelete(
     checkStatusOrThrow(env, rc);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbPut(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbPut(
     JNIEnv* env,
     jobject,
     jlong dbHandle,
@@ -591,7 +591,7 @@ void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbPut(
     checkStatusOrThrow(env, rc);
 }
 
-void Java_com_edwardstock_leveldb_LevelDBNativeProvider_dbClose(
+void Java_com_edwardstock_leveldb_internal_LevelDBNativeProvider_dbClose(
     JNIEnv* env,
     jobject,
     jlong dbHandle

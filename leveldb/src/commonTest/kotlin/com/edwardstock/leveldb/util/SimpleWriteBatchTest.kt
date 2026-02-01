@@ -1,8 +1,8 @@
 package com.edwardstock.leveldb.util
 
-import com.edwardstock.leveldb.LevelDB
+import com.edwardstock.leveldb.api.LevelDB
 import com.edwardstock.leveldb.common.DatabaseTestCase
-import com.edwardstock.leveldb.implementation.SimpleWriteBatch
+import com.edwardstock.leveldb.impl.SimpleWriteBatch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

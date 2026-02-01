@@ -1,6 +1,6 @@
 package com.edwardstock.leveldb.util
 
-import com.edwardstock.leveldb.utils.BytesHelper.lexicographicCompare
+import com.edwardstock.leveldb.internal.BytesHelper.lexicographicCompare
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

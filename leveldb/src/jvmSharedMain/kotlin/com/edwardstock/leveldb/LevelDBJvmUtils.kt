@@ -5,6 +5,9 @@
 
 package com.edwardstock.leveldb
 
+import com.edwardstock.leveldb.api.LevelDB
+import com.edwardstock.leveldb.internal.levelDbLoadNativeLibrary
+
 internal const val NATIVE_LIB_NAME = "leveldb_jni"
 
 /**
