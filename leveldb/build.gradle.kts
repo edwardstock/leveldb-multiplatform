@@ -72,7 +72,7 @@ kotlin {
     macosX64()
     mingwX64()
 
-    androidLibrary {
+    android {
         minSdk { version = release(libs.versions.android.minSdk.get().toInt()) }
         compileSdk { version = release(libs.versions.android.compileSdk.get().toInt()) }
         namespace = group as String
@@ -194,6 +194,8 @@ atomicfu {
 
 val jniResourcesDir = layout.buildDirectory.dir("generated/jniResources/jvmMain")
 val prepareJvmJniLibs = tasks.register<Sync>("prepareJvmJniLibs") {
+    group = "build"
+    description = "Stages the prebuilt JNI native libraries into the JVM resources for the runtime loader"
     val prebuiltDir = rootProject.layout.projectDirectory.dir("native/prebuilt")
     val jniLibs = listOf(
         "linux/x86_64/Release/libleveldb_jni.so" to "linux_64",

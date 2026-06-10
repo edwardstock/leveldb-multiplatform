@@ -120,6 +120,11 @@ jobs:
         run: |
           VERSION_ARG=""
           if [ -n "${{ github.event.inputs.version }}" ]; then
+            # workflow_dispatch: explicit override wins.
             VERSION_ARG="-Pversion=${{ github.event.inputs.version }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            # tag push: the tag (e.g. 2.0.1) IS the version — otherwise the build falls back to the
+            # hardcoded libVersion and would publish the wrong coordinates.
+            VERSION_ARG="-Pversion=${{ github.ref_name }}"
           fi
           ./gradlew ${VERSION_ARG} ${{ matrix.publish_tasks }}
