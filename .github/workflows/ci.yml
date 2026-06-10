@@ -1,6 +1,7 @@
 name: PR Check
 permissions:
   contents: read
+  pull-requests: write
 on:
   pull_request:
 
@@ -17,7 +18,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            gradle_args: ":leveldb:check"
+            gradle_args: ":leveldb:check :leveldb:koverXmlReport"
           - os: macos-latest
             gradle_args: ":leveldb:check"
           - os: windows-latest
@@ -50,6 +51,15 @@ jobs:
         env:
           JAVA_TOOL_OPTIONS: "-XX:+CreateCoredumpOnCrash -XX:ErrorFile=leveldb/hs_err_pid%p.log"
         run: ./gradlew ${{ matrix.gradle_args }}
+
+      - name: Post coverage to PR
+        if: matrix.os == 'ubuntu-22.04'
+        uses: mi-kas/kover-report@v1
+        with:
+          path: leveldb/build/reports/kover/report.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: Code coverage
+          update-comment: true
 
       - name: Upload JVM crash logs
         if: failure()

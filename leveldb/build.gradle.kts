@@ -235,59 +235,14 @@ tasks.withType<AbstractTestTask>().configureEach {
 
 kover {
     reports {
-        // filters for all report types of all build variants
         filters {
             excludes {
                 classes(
-                    "*Fragment",
-                    "*Fragment\$*",
-                    "**/*\$DefaultImpls*",
-                    "*_Impl",
-                    "*_Impl\$*",
-                    "*ViewModelFactory",
-                    "*Activity",
-                    "*ActivityKt",
-                    "*Activity\$*",
-                    "*.databinding.*",
-                    "*.BuildConfig",
-                    "*Dto",
-                    ".R.class",
-                    "**.R\$*.class",
-                    "**.BR.class",
-                    "**.BuildConfig.*",
-                    "**.Manifest*.*",
-                    "android.**",
-                    "**.di.**",
-                    "**.view.**",
-                    "**.ui.**",
-                    "**.navigation.**",
-                    "**.router.**",
-                    "**.*_MembersInjector*.*",
-                    "**.*_MembersInjector",
-                    "**.*_Factory.*",
-                    "**.*_Provide*Factory.*",
-                    "**.*_Get*Factory.*",
-                    "**.**Service**",
-                    "**.**Service",
-                    "**.**Worker**",
-                    "**.**Worker",
-                    "*Router",
-                    "**.**Component**",
-                    "**.**Component",
-                    "**.**Module**",
-                    "**.**Module",
-                    "**.**Adapter",
-                    "**.**View",
-                    "**.**Dialog",
-                    "**.**App",
-                    "**.**Analytics",
-                    "**.**Navigator",
-                    "**.**Adapter**",
-                    "**.**View**",
-                    "**.**Dialog**",
-                    "**.**App**",
-                    "**.**Analytics**",
-                    "**.**Navigator**",
+                    // Test doubles shipped in the public API (Mock/NoOp) — helpers for consumers'
+                    // tests, not production code under test themselves.
+                    "com.edwardstock.leveldb.test.*",
+                    // Trivial exception types (message/cause plumbing, no real logic to cover).
+                    "com.edwardstock.leveldb.exception.*",
                 )
             }
         }
