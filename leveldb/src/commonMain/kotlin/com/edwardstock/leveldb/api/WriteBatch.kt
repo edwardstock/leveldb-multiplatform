@@ -31,7 +31,7 @@ import com.edwardstock.leveldb.config.LevelDBInstanceConfig
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
  * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OFz SUBSTITUTE GOODS OR SERVICES;
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
@@ -45,7 +45,11 @@ interface WriteBatch : Iterable<WriteBatch.Operation> {
     val config: LevelDBInstanceConfig
 
     /**
-     * Interace for a WriteBatch operation. LevelDB supports puts and deletions
+     * A single operation inside a [WriteBatch]: either a put or a delete.
+     *
+     * Invariant: the value's nullability is the single source of truth.
+     * `value() == null` means delete; a non-null value means put. [isPut]/[isDel] are derived
+     * from it and must NOT be overridden to contradict the value.
      */
     interface Operation {
         /**
@@ -56,32 +60,27 @@ interface WriteBatch : Iterable<WriteBatch.Operation> {
         fun key(): ByteArray
 
         /**
-         * The value to associate with [.key]
+         * The value associated with [key].
          *
-         * @return could be <tt>null</tt>, especially if [.isDel] <tt>== true</tt>
+         * @return the value for a put, or `null` for a delete
          */
         fun value(): ByteArray?
 
-        /**
-         * Whether this operation is a put
-         *
-         * @return
-         */
-        val isPut: Boolean
+        /** Whether this operation is a put. Derived from [value]: a put has a non-null value. */
+        val isPut: Boolean get() = value() != null
 
-        /**
-         * Whether this operation is a delete
-         *
-         * @return
-         */
-        val isDel: Boolean
+        /** Whether this operation is a delete. Derived from [value]: a delete has a null value. */
+        val isDel: Boolean get() = value() == null
     }
 
     /**
-     * Put the key-value pair in the database
+     * Queue a put for the key-value pair.
+     *
+     * Passing a `null` [value] is equivalent to [del] (the key will be deleted). A put always stores
+     * a non-null value; use `ByteArray(0)` for an empty value.
      *
      * @param key   the key to write
-     * @param value the value to write
+     * @param value the value to write, or `null` to delete the key
      * @return this WriteBatch for chaining
      */
     fun put(key: ByteArray, value: ByteArray?): WriteBatch

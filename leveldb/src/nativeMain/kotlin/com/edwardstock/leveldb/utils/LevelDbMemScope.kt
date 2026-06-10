@@ -30,6 +30,9 @@ class MemScopeBufferReader<T: CPointed>(
 }
 
 fun MemScopeBufferReader<UByteVar>.readBytes(): ByteArray? {
+    // Contract with the C side (cleveldb.cpp): on an empty result or any error it sets *out = nullptr
+    // and never allocates, so the size==0 early return below has nothing to free. If that contract ever
+    // changes (e.g. malloc(0) for empty), this must free the buffer or it leaks.
     val size = len.value.toInt()
     if (size == 0) {
         return ByteArray(0)

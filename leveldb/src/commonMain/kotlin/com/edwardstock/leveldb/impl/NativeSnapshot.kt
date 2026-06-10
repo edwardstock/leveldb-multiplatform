@@ -1,6 +1,5 @@
 package com.edwardstock.leveldb.impl
 
-import com.edwardstock.leveldb.api.LevelDB
 import com.edwardstock.leveldb.api.Snapshot
 import com.edwardstock.leveldb.internal.DbSnapshotHandle
 import kotlinx.atomicfu.atomic
@@ -34,7 +33,7 @@ import kotlinx.atomicfu.atomic
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
  * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OFz SUBSTITUTE GOODS OR SERVICES;
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
@@ -56,8 +55,8 @@ class NativeSnapshot internal constructor(
     override val isReleased: Boolean
         get() = handle == null
 
-    fun checkOwner(db: LevelDB): Boolean {
-        return ownerToken === db.token
+    fun checkOwner(owner: Any): Boolean {
+        return ownerToken === owner
     }
 
     override fun close() {

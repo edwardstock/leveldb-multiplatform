@@ -21,7 +21,11 @@ internal data class LevelDBEntryState(
     @Volatile var schemaOkForVersion: Int? = null,  // cheap cache for migration checks
     @Volatile var schemaFailedState: LevelDBSchemaFailedState? = null,
     var db: LevelDB? = null,
-    val ownersDepth: MutableMap<Job, Int> = mutableMapOf(),
+    // Keyed on the stable ReentryToken (carried in the coroutine context), NOT on
+    // coroutineContext.job: use() wraps its body in withContext(...), which mints a fresh
+    // child Job every call — including reentrant ones — so a Job key never matches across
+    // nesting and reentrancy detection silently fails (double refCount + 2nd permit -> deadlock).
+    val ownersDepth: MutableMap<ReentryToken, Int> = mutableMapOf(),
     var refCount: Int = 0,
     val access: Semaphore = Semaphore(MAX_DB_ACCESS_PERMITS),
     val exclusiveMutex: Mutex = Mutex(),

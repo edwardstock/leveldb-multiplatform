@@ -32,8 +32,6 @@ class NativeLevelDB(
     filePath: String,
     override val config: LevelDBInstanceConfig = LevelDBInstanceConfig(),
 ) : LevelDB {
-    override val token: Any = Any()
-
     private val snapshotsLock = reentrantLock()
     private val snapshots = mutableSetOf<NativeSnapshot>()
 
@@ -215,7 +213,7 @@ class NativeLevelDB(
     override fun obtainSnapshot(): Snapshot {
         checkIfClosed()
         return NativeSnapshot(
-            ownerToken = token,
+            ownerToken = this,
             snapshotHandle = LevelDBNativeProvider.impl.dbSnapshot(handle),
             onClosed = {
                 snapshotsLock.withLock { snapshots.remove(it) }

@@ -1,0 +1,23 @@
+# Normalize line endings: store text files as LF in the repository,
+# regardless of the contributor's OS. Working-tree checkout stays native.
+* text=auto eol=lf
+
+# Windows scripts stay CRLF byte-for-byte (Gradle ships gradlew.bat as CRLF);
+# -text means git never converts them, so they are not normalized to LF.
+*.bat -text
+*.cmd -text
+*.ps1 -text
+
+# Binary artifacts — never touch their bytes.
+*.png  binary
+*.webp binary
+*.jpg  binary
+*.jpeg binary
+*.ico  binary
+*.so   binary
+*.dylib binary
+*.dll  binary
+*.a    binary
+*.jar  binary
+*.keystore binary
+*.xcuserstate binary

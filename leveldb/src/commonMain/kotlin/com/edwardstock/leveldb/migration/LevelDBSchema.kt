@@ -39,19 +39,19 @@ val LEVELDB_MAGIC_BYTES: ByteArray = byteArrayOf(0xED.toByte(), 0xDB.toByte(), 0
  *       override val to = 3
  *       override val name = "Rewrite user values to v3"
  *
- *       override suspend fun migrate(db: LevelDBOps) {
+ *       override suspend fun migrate(db: LevelDB) {
  *         // Example pattern: scan keys with a prefix and rewrite values.
  *         val it = db.iterator(fillCache = false)
  *         try {
  *           val prefix = "user:".encodeToByteArray()
  *           it.seek(prefix)
- *           while (it.isValid()) {
+ *           while (it.isValid) {
  *             val k = it.key()
  *             if (!k.startsWith(prefix)) break
  *
  *             val oldValue = it.value()
  *             val newValue = transformUserV2toV3(oldValue)
- *             db.put(k, newValue)
+ *             db.putBytes(k, newValue)
  *
  *             it.next()
  *           }
@@ -75,7 +75,6 @@ data class LevelDBSchema(
     val migrations: List<LevelDBMigration>,
     val migrateAutomatically: Boolean = true,
     val safety: LevelDBMigrationSafetyPolicy = LevelDBMigrationSafetyPolicy.NONE,
-    val allowDowngrade: Boolean = false,
     val versionKey: ByteArray = LEVELDB_MAGIC_BYTES + "_schema_version".encodeToByteArray(),
     val inProgressKey: ByteArray = LEVELDB_MAGIC_BYTES + "_migration_in_progress".encodeToByteArray(),
     val backupDirName: String = ".leveldb_migration_backup",
@@ -88,7 +87,6 @@ data class LevelDBSchema(
         other as LevelDBSchema
 
         if (targetVersion != other.targetVersion) return false
-        if (allowDowngrade != other.allowDowngrade) return false
         if (migrations != other.migrations) return false
         if (!versionKey.contentEquals(other.versionKey)) return false
         if (!inProgressKey.contentEquals(other.inProgressKey)) return false
@@ -98,7 +96,6 @@ data class LevelDBSchema(
 
     override fun hashCode(): Int {
         var result = targetVersion
-        result = 31 * result + allowDowngrade.hashCode()
         result = 31 * result + migrations.hashCode()
         result = 31 * result + versionKey.contentHashCode()
         result = 31 * result + inProgressKey.contentHashCode()

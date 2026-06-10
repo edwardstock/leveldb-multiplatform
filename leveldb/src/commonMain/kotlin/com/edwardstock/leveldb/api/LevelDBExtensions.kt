@@ -136,11 +136,14 @@ private inline fun forEachAllInternal(
 }
 
 /**
- * Use with care as it iterates over all data.
+ * Iterates over every entry in the database.
+ *
+ * Use with care — this is a full scan. [fillCache] defaults to `false` so the scan does not evict
+ * the working set from LevelDB's block cache; pass `true` only if you intend to warm the cache.
  */
-fun LevelDB.forEachAll(block: (LevelDBEntryView) -> Unit) {
+fun LevelDB.forEachAll(fillCache: Boolean = false, block: (LevelDBEntryView) -> Unit) {
     forEachAllInternal(
-        iteratorProvider = { iterator() },
+        iteratorProvider = { iterator(fillCache = fillCache) },
         block = block,
     )
 }

@@ -32,7 +32,7 @@ import kotlin.reflect.KClass
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
  * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OFz SUBSTITUTE GOODS OR SERVICES;
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
@@ -46,7 +46,7 @@ class LevelDBClosedException @JvmOverloads constructor(detailMessage: String? = 
     LevelDBException(detailMessage)
 
 class LevelDBSnapshotOwnershipException @JvmOverloads constructor(detailMessage: String? = "The snapshot is not owned by this database.") :
-    RuntimeException(detailMessage)
+    LevelDBException(detailMessage)
 
 class LevelDBCorruptionException(detailMessage: String?) : LevelDBException(detailMessage)
 
@@ -59,7 +59,7 @@ class LevelDBDecodingException : LevelDBException {
 class LevelDBIOException(detailMessage: String?) : LevelDBException(detailMessage)
 
 class LevelDBIteratorNotValidException @JvmOverloads constructor(detailMessage: String? = "Iterator is not valid.") :
-    RuntimeException(detailMessage)
+    LevelDBException(detailMessage)
 
 open class LevelDBMigrationException : LevelDBException {
     constructor(message: String?) : super(message)

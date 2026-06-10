@@ -55,6 +55,7 @@ docker run --rm \
   -e RUNNER_TEMP=/tmp \
   -e HOME=/tmp/home \
   -e GRADLE_USER_HOME=/gradle \
+  -e KONAN_DATA_DIR=/gradle/.konan \
   -e JAVA_TOOL_OPTIONS="-XX:+CreateCoredumpOnCrash -XX:ErrorFile=leveldb/hs_err_pid%p.log -Duser.home=/tmp/home -Duser.name=runner" \
   -e CI=1 \
   -u "$(id -u):$(id -g)" \

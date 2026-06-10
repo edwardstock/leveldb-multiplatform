@@ -30,7 +30,9 @@ import com.edwardstock.leveldb.migration.LevelDBSchema
 import com.edwardstock.leveldb.migration.shouldMigrate
 import kotlinx.atomicfu.locks.reentrantLock
 import kotlinx.atomicfu.locks.withLock
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
@@ -44,6 +46,7 @@ import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import okio.SYSTEM
+import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.TimeSource
 
@@ -62,10 +65,21 @@ open class LevelDBInstance internal constructor(
     val closeStrategy: CloseStrategy = CloseStrategy.Immediate,
     val timeSource: TimeSource = TimeSource.Monotonic,
     val schema: LevelDBSchema? = null,
+    dispatcher: CoroutineDispatcher? = null,
     scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
 ) : CoroutineScope by scope {
 
     private val logger = config.requireLogger
+
+    /**
+     * Dispatcher on which `use {}` runs its blocking DB operations.
+     * Resolution: explicit [dispatcher] override -> the [scope]'s dispatcher -> [Dispatchers.IO].
+     * The IO fallback keeps `use {}` main-safe by default.
+     */
+    private val opsDispatcher: CoroutineDispatcher =
+        dispatcher
+            ?: (scope.coroutineContext[ContinuationInterceptor] as? CoroutineDispatcher)
+            ?: Dispatchers.IO
 
     companion object {
         init {
@@ -255,6 +269,7 @@ open class LevelDBInstance internal constructor(
         private var closeStrategy: CloseStrategy = CloseStrategy.Immediate
         private var timeSource: TimeSource = TimeSource.Monotonic
         private var schema: LevelDBSchema? = null
+        private var dispatcher: CoroutineDispatcher? = null
         private var instanceConfigBuilder: LevelDBInstanceConfig.Builder = LevelDBInstanceConfig.builder()
 
         /**
@@ -265,11 +280,25 @@ open class LevelDBInstance internal constructor(
         fun fileSystem(fileSystem: FileSystem) = apply { this.fileSystem = fileSystem }
 
         /**
-         * Execute coroutines using a different [CoroutineScope].
+         * Scope used for internal housekeeping coroutines (e.g. the idle-close job).
          *
-         * Allows you to tie the instance lifetime to a specific dispatcher or job hierarchy.
+         * This does NOT control the thread on which `use {}` operations run — use [dispatcher] for that.
+         * Use it to tie background housekeeping to a specific job hierarchy.
          */
         fun scope(scope: CoroutineScope) = apply { this.scope = scope }
+
+        /**
+         * Dispatcher on which `use {}` executes its (blocking) database operations.
+         *
+         * When unset, the dispatcher is taken from the configured [scope] (default [Dispatchers.IO]),
+         * which keeps `use {}` main-safe: you can call it from any dispatcher and the blocking native
+         * I/O is moved off the caller automatically. Set this only to confine operations to a specific
+         * dispatcher independent of the scope. Reentrant `use {}` inherits the outer dispatcher.
+         *
+         * The raw [LevelDB.open] path is intentionally synchronous and runs on the caller's thread;
+         * this knob only affects the managed `use {}` path.
+         */
+        fun dispatcher(dispatcher: CoroutineDispatcher) = apply { this.dispatcher = dispatcher }
 
         /**
          * Provide the migration [schema] applied during open.
@@ -340,6 +369,10 @@ open class LevelDBInstance internal constructor(
                 path = path,
                 config = instanceConfigBuilder.build(),
                 fileSystem = fileSystem,
+                closeStrategy = closeStrategy,
+                timeSource = timeSource,
+                schema = schema,
+                dispatcher = dispatcher,
                 scope = scope,
             )
         }
@@ -348,6 +381,10 @@ open class LevelDBInstance internal constructor(
             path: Path,
             config: LevelDBInstanceConfig,
             fileSystem: FileSystem,
+            closeStrategy: CloseStrategy,
+            timeSource: TimeSource,
+            schema: LevelDBSchema?,
+            dispatcher: CoroutineDispatcher?,
             scope: CoroutineScope,
         ): LevelDBInstance = LevelDBInstance(
             path = path,
@@ -356,6 +393,7 @@ open class LevelDBInstance internal constructor(
             closeStrategy = closeStrategy,
             timeSource = timeSource,
             schema = schema,
+            dispatcher = dispatcher,
             scope = scope,
         )
     }
@@ -381,7 +419,7 @@ open class LevelDBInstance internal constructor(
         logEvent("use.$event", token, detail)
 
     /**
-     * Opens (or reuses) a LevelDB handle for this instance path and runs [block] with a [LevelDBOps] facade
+     * Opens (or reuses) a LevelDB handle for this instance path and runs [block] with a [LevelDB] receiver
      *
      * This is the standard way to perform operations with automatic open/close and concurrency control
      *
@@ -430,14 +468,21 @@ open class LevelDBInstance internal constructor(
      *  @see Companion.useExclusively
      */
     suspend fun <T> use(block: suspend LevelDB.() -> T): T {
-        val existing = coroutineContext[ReentryKey]
+        // Read the SUSPEND continuation context, NOT this LevelDBInstance's CoroutineScope.coroutineContext:
+        // the class is `CoroutineScope by scope`, so the unqualified `coroutineContext` resolves to the
+        // instance's fixed scope context, which never carries a caller's ReentryToken — making every use{}
+        // (even nested) look non-reentrant and double-count refCount + take a second permit (deadlock under
+        // contention). currentCoroutineContext() is kotlinx's alias for exactly this shadowing trap.
+        val callerContext = currentCoroutineContext()
+        val existing = callerContext[ReentryKey]
         val token = existing ?: ReentryToken()
-        val ctx = if (existing == null) coroutineContext + token else coroutineContext
+        // Outermost use{} switches blocking DB work onto opsDispatcher (scope's dispatcher, else IO),
+        // which keeps use{} main-safe. Reentrant use{} inherits the outer context (dispatcher + token).
+        val ctx = if (existing == null) callerContext + opsDispatcher + token else callerContext
         var acquiredAccess = false
 
         logUseEvent("enter", token, "existing=$existing")
         return withContext(ctx) {
-            val job = coroutineContext.job
             val pathKey = state.path
             assertNotInExclusivePath(pathKey)
             logUseEvent("postponeClose", token)
@@ -445,35 +490,40 @@ open class LevelDBInstance internal constructor(
 
             var isReentrant = false
             val schemaOkForVersion = state.self.withLock {
-                val depth = state.ownersDepth[job] ?: 0
+                val depth = state.ownersDepth[token] ?: 0
                 if (depth > 0) {
-                    state.ownersDepth[job] = depth + 1
+                    state.ownersDepth[token] = depth + 1
                     isReentrant = true
                     logUseEvent("reentrant", token, "depth=$depth")
                 } else {
-                    state.ownersDepth[job] = 1
+                    state.ownersDepth[token] = 1
                     state.refCount += 1
                     logUseEvent("newOwner", token, "depth=1")
                 }
 
                 state.schemaOkForVersion
             }
-            if (!isReentrant) {
-                tryMigrate(schemaOkForVersion, token)
-
-                logUseEvent("waitingForAccess", token, "exclusiveGateActive=${state.exclusiveGate?.isActive == true}")
-                state.acquireSharedPermit()
-                acquiredAccess = true
-
-                // open db if first time for this token
-                logUseEvent("opening", token)
-                ensureOpen(
-                    entry = state,
-                    config = config,
-                )
-            }
-
+            // The try MUST cover the setup below: refCount/ownersDepth were already incremented above,
+            // and acquireSharedPermit() may take a permit. If tryMigrate/acquireSharedPermit/ensureOpen
+            // throws (migration failure, DB open failure, cancellation), the finally still has to run,
+            // or refCount and access permits leak — which permanently blocks idle-close and can exhaust
+            // the access semaphore (deadlocking the path).
             try {
+                if (!isReentrant) {
+                    tryMigrate(schemaOkForVersion, token)
+
+                    logUseEvent("waitingForAccess", token, "exclusiveGateActive=${state.exclusiveGate?.isActive == true}")
+                    state.acquireSharedPermit()
+                    acquiredAccess = true
+
+                    // open db if first time for this token
+                    logUseEvent("opening", token)
+                    ensureOpen(
+                        entry = state,
+                        config = config,
+                    )
+                }
+
                 val db: LevelDB = state.self.withLock {
                     if (state.db == null) {
                         throw LevelDBException("LevelDB not opened for ${state.path}")
@@ -484,28 +534,35 @@ open class LevelDBInstance internal constructor(
                 logUseEvent("obtainedDb", token)
                 db.block()
             } finally {
-                var becameOutermost = false
-                state.self.withLock {
-                    logUseEvent("releasing", token)
-                    val newDepth = (state.ownersDepth[job] ?: 1) - 1
-                    if (newDepth <= 0) {
-                        state.ownersDepth.remove(job)
-                        state.refCount -= 1
-                        becameOutermost = state.refCount == 0
-                    } else {
-                        state.ownersDepth[job] = newDepth
+                // Cleanup MUST complete even when the use{} body was cancelled — refCount/permit release
+                // and the idle/Immediate close cannot be skipped or they leak permanently (see the warning
+                // above). This block suspends on cancellable primitives (Mutex.withLock, scheduleCloseIfIdle),
+                // so on an already-cancelled coroutine those can abort mid-cleanup under contention. Run it
+                // under NonCancellable, mirroring closeAndAwait(). (PROD BUG #A)
+                withContext(NonCancellable) {
+                    var becameOutermost = false
+                    state.self.withLock {
+                        logUseEvent("releasing", token)
+                        val newDepth = (state.ownersDepth[token] ?: 1) - 1
+                        if (newDepth <= 0) {
+                            state.ownersDepth.remove(token)
+                            state.refCount -= 1
+                            becameOutermost = state.refCount == 0
+                        } else {
+                            state.ownersDepth[token] = newDepth
+                        }
                     }
-                }
 
-                logUseEvent("released", token, "becameOutermost=$becameOutermost")
-                if (becameOutermost) {
-                    scheduleCloseIfIdle(this@LevelDBInstance, state)
-                }
+                    logUseEvent("released", token, "becameOutermost=$becameOutermost")
+                    if (becameOutermost) {
+                        scheduleCloseIfIdle(this@LevelDBInstance, state)
+                    }
 
-                logUseEvent("releasingAccess", token, "acquired=$acquiredAccess")
-                if (acquiredAccess) {
-                    state.access.release()
-                    logUseEvent("releasedAccess", token)
+                    logUseEvent("releasingAccess", token, "acquired=$acquiredAccess")
+                    if (acquiredAccess) {
+                        state.access.release()
+                        logUseEvent("releasedAccess", token)
+                    }
                 }
             }
         }
@@ -563,10 +620,15 @@ open class LevelDBInstance internal constructor(
     }
 
     fun close() {
-        // best-effort async close; callers can close the DB explicitly when they need determinism
-        launch(NonCancellable) {
-            cancelScheduledClose(state)
-            closeIfIdle(state)
+        // best-effort async close; callers can close the DB explicitly when they need determinism.
+        // launch(NonCancellable) is deprecated (it detaches from structured concurrency); launch a normal
+        // child on this instance's scope and wrap the close in withContext(NonCancellable) so the cleanup
+        // still runs to completion if the job is cancelled mid-way.
+        launch {
+            withContext(NonCancellable) {
+                cancelScheduledClose(state)
+                closeIfIdle(state)
+            }
         }
     }
 

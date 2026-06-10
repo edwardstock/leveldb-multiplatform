@@ -34,7 +34,7 @@ import kotlinx.atomicfu.atomic
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
  * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OFz SUBSTITUTE GOODS OR SERVICES;
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
@@ -53,10 +53,9 @@ open class NativeWriteBatch(writeBatch: WriteBatch) : AutoCloseable {
     init {
         handle = LevelDBNativeProvider.impl.batchCreate()
         for (operation in writeBatch) {
-            if (operation.isPut) {
-                val value = requireNotNull(operation.value()) {
-                    "WriteBatch put operation requires non-null value"
-                }
+            // value nullability is the single source of truth: null == delete (see WriteBatch.Operation)
+            val value = operation.value()
+            if (value != null) {
                 LevelDBNativeProvider.impl.batchPut(handleRequire, operation.key(), value)
             } else {
                 LevelDBNativeProvider.impl.batchDelete(handleRequire, operation.key())

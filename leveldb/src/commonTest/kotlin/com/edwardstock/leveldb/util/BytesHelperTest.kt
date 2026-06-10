@@ -34,7 +34,7 @@ import kotlin.test.assertTrue
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
  * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OFz SUBSTITUTE GOODS OR SERVICES;
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
@@ -43,13 +43,25 @@ import kotlin.test.assertTrue
     @Throws(Exception::class)
     @Test
     fun testLexicographicComparison() {
-        var a = byteArrayOf(1, 2, 3, 0, 0, 0)
-        var b = byteArrayOf(0xFF.toByte(), 0, 0) // { 255 }
+        val a = byteArrayOf(1, 2, 3, 0, 0, 0)
+        val b = byteArrayOf(0xFF.toByte(), 0, 0) // { 255 }
         assertTrue(lexicographicCompare(a, b) < 0)
         assertTrue(lexicographicCompare(b, a) > 0)
-        a = byteArrayOf(1, 2, 3, 0, 0, 0)
-        b = byteArrayOf(1, 2, 3)
-        assertEquals(0, lexicographicCompare(a, b))
-        assertEquals(0, lexicographicCompare(b, a))
+
+        // A prefix sorts before the longer key that extends it (leveldb::BytewiseComparator),
+        // even when the extra bytes are zero.
+        val prefix = byteArrayOf(1, 2, 3)
+        val extended = byteArrayOf(1, 2, 3, 0, 0, 0)
+        assertTrue(lexicographicCompare(prefix, extended) < 0)
+        assertTrue(lexicographicCompare(extended, prefix) > 0)
+
+        // Empty array sorts before any non-empty array.
+        assertTrue(lexicographicCompare(byteArrayOf(), byteArrayOf(0)) < 0)
+
+        // Bytes compare as unsigned: 0x80 (128) > 0x7F (127).
+        assertTrue(lexicographicCompare(byteArrayOf(0x80.toByte()), byteArrayOf(0x7F)) > 0)
+
+        // Identical content compares equal.
+        assertEquals(0, lexicographicCompare(byteArrayOf(1, 2, 3), byteArrayOf(1, 2, 3)))
     }
 }

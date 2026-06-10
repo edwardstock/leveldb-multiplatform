@@ -31,7 +31,7 @@ import kotlin.jvm.JvmStatic
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
  * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OFz SUBSTITUTE GOODS OR SERVICES;
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
@@ -54,8 +54,12 @@ internal object BytesHelper {
     }
 
     /**
-     * Lexicographically compares two byte arrays, the way the default comparator in a
-     * [com.edwardstock.leveldb.impl.NativeLevelDB] instance works
+     * Lexicographically compares two byte arrays using the same byte-wise ordering as LevelDB's
+     * default comparator (`leveldb::BytewiseComparator`): bytes are compared as unsigned over the
+     * common prefix, and if one array is a prefix of the other, the shorter one sorts first.
+     *
+     * This matches the on-disk key order of [com.edwardstock.leveldb.impl.NativeLevelDB], so the
+     * in-memory test doubles order keys exactly like the native database.
      *
      * @param a nullable byte array
      * @param b nullable byte array
@@ -63,37 +67,19 @@ internal object BytesHelper {
      */
     @JvmStatic
     fun lexicographicCompare(a: ByteArray?, b: ByteArray?): Int {
-        if (a.contentEquals(b)) {
-            return 0
-        }
-        if (a == null) {
-            return -1
-        }
-        if (b == null) {
-            return 1
-        }
+        if (a === b) return 0
+        if (a == null) return -1
+        if (b == null) return 1
 
-        val maxLength = a.size.coerceAtMost(b.size)
-        for (i in 0 until maxLength) {
-            if (a[i].toLong() and 0xFF == b[i].toLong() and 0xFF) {
-                continue
-            }
-            return if (a[i].toLong() and 0xFF > b[i].toLong() and 0xFF) {
-                i + 1
-            } else -(i + 1)
-        }
-        if (a.size > maxLength) {
-            for (i in b.size until a.size) {
-                if (a[i] != 0.toByte()) {
-                    return i + 1
-                }
+        val minLength = a.size.coerceAtMost(b.size)
+        for (i in 0 until minLength) {
+            val ca = a[i].toInt() and 0xFF
+            val cb = b[i].toInt() and 0xFF
+            if (ca != cb) {
+                return ca - cb
             }
         }
-        for (i in a.size until b.size) {
-            if (b[i] != 0.toByte()) {
-                return -(i + 1)
-            }
-        }
-        return 0
+        // Common prefix is equal: the shorter array sorts first.
+        return a.size - b.size
     }
 }

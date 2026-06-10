@@ -10,8 +10,6 @@ internal class NoOpLevelDB(
     override val config: LevelDBInstanceConfig,
     private val onClose: () -> Unit
 ) : LevelDB {
-    override val token: Any = Any()
-
     override val isClosed: Boolean get() = closed
     private var closed = false
 

@@ -5,6 +5,7 @@ import com.edwardstock.leveldb.api.LevelDB
 import com.edwardstock.leveldb.config.LevelDBInstanceConfig
 import com.edwardstock.leveldb.config.LevelDBInstanceConfig.CloseStrategy
 import com.edwardstock.leveldb.migration.LevelDBSchema
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import okio.FileSystem
 import okio.Path
@@ -24,6 +25,7 @@ class AndroidLevelDBInstance private constructor(
     closeStrategy: CloseStrategy = CloseStrategy.Immediate,
     timeSource: TimeSource = TimeSource.Monotonic,
     schema: LevelDBSchema? = null,
+    dispatcher: CoroutineDispatcher? = null,
     scope: CoroutineScope,
 ) : LevelDBInstance(
     path = path,
@@ -32,6 +34,7 @@ class AndroidLevelDBInstance private constructor(
     closeStrategy = closeStrategy,
     timeSource = timeSource,
     schema = schema,
+    dispatcher = dispatcher,
     scope = scope
 ) {
     companion object {
@@ -82,11 +85,19 @@ class AndroidLevelDBInstance private constructor(
             path: Path,
             config: LevelDBInstanceConfig,
             fileSystem: FileSystem,
+            closeStrategy: CloseStrategy,
+            timeSource: TimeSource,
+            schema: LevelDBSchema?,
+            dispatcher: CoroutineDispatcher?,
             scope: CoroutineScope,
         ): LevelDBInstance = AndroidLevelDBInstance(
             path = path,
             config = config,
             fileSystem = fileSystem,
+            closeStrategy = closeStrategy,
+            timeSource = timeSource,
+            schema = schema,
+            dispatcher = dispatcher,
             scope = scope
         )
     }

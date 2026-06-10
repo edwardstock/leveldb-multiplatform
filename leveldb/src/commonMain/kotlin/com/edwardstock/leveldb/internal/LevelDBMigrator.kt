@@ -4,7 +4,6 @@ import com.edwardstock.leveldb.LevelDBInstance
 import com.edwardstock.leveldb.LevelDBInstance.Companion.ensureOpen
 import com.edwardstock.leveldb.api.getValue
 import com.edwardstock.leveldb.api.putValue
-import com.edwardstock.leveldb.api.set
 import com.edwardstock.leveldb.config.createDB
 import com.edwardstock.leveldb.exception.LevelDBCorruptedMigrationException
 import com.edwardstock.leveldb.exception.LevelDBMigrationException
@@ -45,15 +44,24 @@ internal class LevelDBMigratorImpl(
         val storedVersion: Int = db.getValue(schema.versionKey) ?: 0
 
         if (storedVersion == schema.targetVersion) {
+            // #D: clean a stale inProgressKey left by a previously-interrupted migration. The equivalent
+            // cleanup in migrateInPlace is unreachable here because run() short-circuits at already-at-target
+            // before calling it, so a garbage marker would otherwise survive and could later trip the
+            // inProgress validation on the next real migration.
+            db.del(schema.inProgressKey, sync = true)
             state.self.withLock {
                 state.schemaOkForVersion = schema.targetVersion
             }
             return
         }
 
-        if (storedVersion > schema.targetVersion && !schema.allowDowngrade) {
+        // Downgrade is not supported: migrations are strictly linear and forward-only. Express a reversal
+        // as a new forward migration. (The allowDowngrade flag was removed — it could never succeed: the
+        // guard let it past, then resolveLinearPlanOrThrow rejected from>to unconditionally.)
+        if (storedVersion > schema.targetVersion) {
             throw LevelDBMigrationException(
-                "Schema downgrade is not allowed: stored=$storedVersion, target=${schema.targetVersion}"
+                "Schema downgrade is not supported: stored=$storedVersion, target=${schema.targetVersion}. " +
+                        "Express reversals as forward migrations."
             )
         }
 
@@ -149,14 +157,15 @@ internal class LevelDBMigratorImpl(
             inProgress = migDb.getValue<Int>(schema.inProgressKey)
 
             if (storedVersion == schema.targetVersion) {
-                // if someone left garbage inProgressKey - clean it up
-                migDb[schema.inProgressKey] = null
+                // if someone left garbage inProgressKey - clean it up (sync: it's a crash-resume marker)
+                migDb.del(schema.inProgressKey, sync = true)
                 return
             }
 
-            if (storedVersion > schema.targetVersion && !schema.allowDowngrade) {
+            // Downgrade is not supported (defensive backstop; run() already rejects it before we get here).
+            if (storedVersion > schema.targetVersion) {
                 throw LevelDBMigrationException(
-                    "Schema downgrade is not allowed: stored=$storedVersion, target=${schema.targetVersion}"
+                    "Schema downgrade is not supported: stored=$storedVersion, target=${schema.targetVersion}"
                 )
             }
 
@@ -187,8 +196,9 @@ internal class LevelDBMigratorImpl(
             )
 
             for (migration in plan) {
-                // mark that we are attempting to reach `migration.to`
-                migDb.putValue(schema.inProgressKey, migration.to)
+                // mark that we are attempting to reach `migration.to`.
+                // sync=true: crash-resume relies on this marker surviving a power loss, not just a process crash.
+                migDb.putValue(schema.inProgressKey, migration.to, sync = true)
 
                 try {
                     migration.migrate(migDb)
@@ -207,11 +217,11 @@ internal class LevelDBMigratorImpl(
                     )
                 }
 
-                // step succeeded: bump version
-                migDb[schema.versionKey] = migration.to
+                // step succeeded: bump version durably so a power loss can't lose the progress
+                migDb.putValue(schema.versionKey, migration.to, sync = true)
             }
 
-            migDb.del(schema.inProgressKey)
+            migDb.del(schema.inProgressKey, sync = true)
         } catch (e: CancellationException) {
             throw e
         } catch (e: LevelDBMigrationException) {

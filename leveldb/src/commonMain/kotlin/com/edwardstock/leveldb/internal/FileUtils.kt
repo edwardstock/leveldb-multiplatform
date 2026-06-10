@@ -8,7 +8,7 @@ import okio.fakefilesystem.FakeFileSystem
 internal fun canonicalize(fs: FileSystem, p: Path): String {
     if (!fs.isFake()) {
         if (!fs.exists(p)) {
-            fs.createDirectory(p)
+            fs.createDirectories(p)
         }
 
         return fs.canonicalize(p).toString()

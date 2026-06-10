@@ -24,6 +24,8 @@ internal fun cleveldb_status.leveldbStatusToException(message: String?): LevelDB
     LDB_INVALID_ARGUMENT -> LevelDBException(message)
     LDB_NOT_SUPPORTED -> LevelDBException("Operation is not supported: $message")
     LDB_UNKNOWN_ERROR -> LevelDBException("Unknown error $message")
+    // LDB_INVALID_POINTER signals a null/invalid native handle; must not be swallowed as success.
+    LDB_INVALID_POINTER -> LevelDBException("Invalid native pointer${message?.let { ": $it" } ?: ""}")
     else -> null
 }
 

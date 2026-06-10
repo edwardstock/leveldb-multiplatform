@@ -1,6 +1,6 @@
 package com.edwardstock.leveldb.test
 
-import com.edwardstock.leveldb.LevelDbByteArrayComparator
+import com.edwardstock.leveldb.LevelDBInstance
 import com.edwardstock.leveldb.api.LevelDB
 import com.edwardstock.leveldb.api.LevelDBIterator
 import com.edwardstock.leveldb.api.Snapshot
@@ -9,10 +9,18 @@ import com.edwardstock.leveldb.config.LevelDBInstanceConfig
 import com.edwardstock.leveldb.exception.LevelDBClosedException
 import com.edwardstock.leveldb.exception.LevelDBIteratorNotValidException
 import com.edwardstock.leveldb.impl.SimpleWriteBatch
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
+import okio.FileSystem
+import okio.fakefilesystem.FakeFileSystem
 import kotlin.reflect.KClass
 
+// TODO - move to a separate module
+
 /**
- * Pure-Kotlin in-memory LevelDB implementation for tests.
+ * Pure-Kotlin in-memory LevelDB implementation.
+ *
+ * Intended for tests and for swapping into [com.edwardstock.leveldb.LevelDBInstance] via `dbFactory`.
  *
  * Semantics:
  * - Keys are ordered lexicographically (same ordering as native)
@@ -20,20 +28,38 @@ import kotlin.reflect.KClass
  * - [getPropertyBytes] always returns null
  * - Snapshots are point-in-time, immutable views
  */
-class MockLevelDB(
-    override val config: LevelDBInstanceConfig = LevelDBInstanceConfig(),
-    initial: Map<ByteArray, ByteArray?> = emptyMap(),
-) : LevelDB {
+class MockLevelDB : LevelDB {
 
-    override val token: Any = Any()
+    /**
+     * Primary ctor used by [com.edwardstock.leveldb.api.LevelDBInstanceFactory] (where `path` is available).
+     *
+     * Store is persisted per path, so multiple opens of the same path share the same data.
+     */
+    constructor(
+        path: String,
+        config: LevelDBInstanceConfig = LevelDBInstanceConfig(),
+        initial: Map<ByteArray, ByteArray?> = emptyMap(),
+    ) {
+        this.path = path
+        this.config = config
+        this.store = acquireStore(path, initial)
+    }
+
+    /**
+     * Convenience ctor. Uses a unique in-memory path (so different instances won't share state).
+     */
+    constructor(
+        config: LevelDBInstanceConfig = LevelDBInstanceConfig(),
+        initial: Map<ByteArray, ByteArray?> = emptyMap(),
+    ) : this(path = nextInMemoryPath(), config = config, initial = initial)
+
+    private val path: String
+
+    override val config: LevelDBInstanceConfig
 
     private var closed = false
 
-    private var store = SortedBytesStore().apply {
-        for ((k, v) in initial) {
-            if (v != null) put(k, v) else remove(k)
-        }
-    }
+    private var store: SortedBytesStore
 
     override val isClosed: Boolean
         get() = closed
@@ -44,14 +70,25 @@ class MockLevelDB(
 
     override fun getBytes(key: ByteArray, snapshot: Snapshot?): ByteArray? {
         ensureOpen()
-        val s = snapshot as? MockSnapshot
-        return (s?.store ?: store).get(key)
+        return readStoreFor(snapshot).get(key)
     }
 
     override fun iterator(fillCache: Boolean, snapshot: Snapshot?): LevelDBIterator {
         ensureOpen()
+        // Iterator must be stable even if DB is modified later -> take a snapshot copy.
+        return MockIterator(readStoreFor(snapshot).snapshotCopy(), config)
+    }
+
+    /**
+     * Resolves which store a read should observe.
+     *
+     * A live (unreleased) [MockSnapshot] serves its captured point-in-time copy. A RELEASED
+     * snapshot falls back to the live store — matching native LevelDB, where a released snapshot's
+     * handle is null and reads observe the live database rather than the stale point-in-time view.
+     */
+    private fun readStoreFor(snapshot: Snapshot?): SortedBytesStore {
         val s = snapshot as? MockSnapshot
-        return MockIterator((s?.store ?: store).snapshotCopy(), config)
+        return if (s != null && !s.isReleased) s.store else store
     }
 
     override fun obtainSnapshot(): Snapshot {
@@ -76,15 +113,19 @@ class MockLevelDB(
     override fun write(writeBatch: WriteBatch, sync: Boolean) {
         ensureOpen()
         // Apply atomically: build a copy, apply, then swap.
+        // value nullability is the single source of truth: null == delete (see WriteBatch.Operation)
         val copy = store.snapshotCopy()
         for (op in writeBatch) {
-            if (op.isDel || op.value() == null) {
+            val v = op.value()
+            if (v == null) {
                 copy.remove(op.key())
             } else {
-                copy.put(op.key(), op.value()!!)
+                copy.put(op.key(), v)
             }
         }
         store = copy
+        // Persist the swapped store into registry for this path.
+        updateStore(path, store)
     }
 
     override fun del(key: ByteArray, sync: Boolean) {
@@ -144,7 +185,13 @@ class MockLevelDB(
 
         override fun seek(key: ByteArray) {
             ensureOpen()
-            index = lowerBound(keys, key)
+            val ceil = snapshot.ceilingKey(key)
+            if (ceil == null) {
+                index = -1
+                return
+            }
+            // keys are copies; match by content
+            index = keys.indexOfFirst { it.contentEquals(ceil) }
             if (index !in keys.indices) index = -1
         }
 
@@ -191,16 +238,50 @@ class MockLevelDB(
         private fun ensureValid() {
             if (!isValid) throw LevelDBIteratorNotValidException()
         }
+    }
 
-        private fun lowerBound(sortedKeys: List<ByteArray>, key: ByteArray): Int {
-            var low = 0
-            var high = sortedKeys.size
-            while (low < high) {
-                val mid = (low + high) ushr 1
-                val cmp = LevelDbByteArrayComparator.compare(sortedKeys[mid], key)
-                if (cmp < 0) low = mid + 1 else high = mid
+    private companion object {
+        private val registryLock = SynchronizedObject()
+        private val storesByPath = mutableMapOf<String, SortedBytesStore>()
+        private var inMemoryCounter = 0
+
+        private fun nextInMemoryPath(): String = synchronized(registryLock) {
+            inMemoryCounter += 1
+            "(in-memory-$inMemoryCounter)"
+        }
+
+        private fun acquireStore(path: String, initial: Map<ByteArray, ByteArray?>): SortedBytesStore {
+            return synchronized(registryLock) {
+                val existing = storesByPath[path]
+                if (existing != null) return@synchronized existing
+
+                val created = SortedBytesStore().apply {
+                    for ((k, v) in initial) {
+                        if (v != null) put(k, v) else remove(k)
+                    }
+                }
+                storesByPath[path] = created
+                created
             }
-            return low
+        }
+
+        private fun updateStore(path: String, store: SortedBytesStore) {
+            synchronized(registryLock) {
+                storesByPath[path] = store
+            }
         }
     }
+}
+
+fun LevelDBInstance.Companion.mock(
+    filePath: String = "mock",
+    initialData: Map<ByteArray, ByteArray?> = emptyMap(),
+    fileSystem: FileSystem = FakeFileSystem(),
+    builder: LevelDBInstance.Builder.() -> Unit = {}
+): LevelDBInstance = LevelDBInstance.builder(filePath) {
+    instance {
+        dbFactory { path, config -> MockLevelDB(path, config, initialData) }
+        fileSystem(fileSystem)
+    }
+    builder()
 }

@@ -29,7 +29,7 @@ package com.edwardstock.leveldb.api
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
  * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OFz SUBSTITUTE GOODS OR SERVICES;
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
@@ -41,13 +41,11 @@ package com.edwardstock.leveldb.api
  */
 interface Snapshot : AutoCloseable {
     /**
-     * Checks whether this snapshot has been released
+     * Whether this snapshot has been released.
      *
-     * A snapshot is released either when explicitly released with
-     * [LevelDB.releaseSnapshot] or when the database
-     * that created is garbage collected or closed
+     * A snapshot is released when you [close] it, or when the database that created it is closed.
      *
-     * @return whether this snapshot has been released by the system
+     * @return whether this snapshot has been released
      */
     val isReleased: Boolean
 }

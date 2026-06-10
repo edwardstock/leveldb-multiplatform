@@ -10,3 +10,10 @@ leveldb/.cxx
 .extNativeBuild
 cmake-build*
 *.hprof
+
+# Review notes — kept locally, not tracked
+/REVIEW.md
+
+# Xcode per-user state
+**/xcuserdata/
+*.xcuserstate

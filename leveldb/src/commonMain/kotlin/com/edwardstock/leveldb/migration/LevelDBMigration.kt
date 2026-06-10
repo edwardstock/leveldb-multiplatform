@@ -30,7 +30,7 @@ typealias LevelDBSchemaVersion = Int
  * (LevelDB keys are ordered; prefix scans are efficient.)
  *
  * ### 3) Use batches for bulk changes
- * When rewriting many keys, use [LevelDBOps.withBatch] or [LevelDBOps.write] with [WriteBatch]
+ * When rewriting many keys, use [LevelDB.withBatch] or [LevelDB.write] with [WriteBatch]
  * to reduce write amplification and improve speed
  *
  * ## Example: prefix rewrite + batching
@@ -40,7 +40,7 @@ typealias LevelDBSchemaVersion = Int
  *   override val to = 3
  *   override val name = "Rename user:<id> -> users/<id>"
  *
- *   override suspend fun migrate(db: LevelDBOps) {
+ *   override suspend fun migrate(db: LevelDB) {
  *     val prefix = "user:".encodeToByteArray()
  *     val newPrefix = "users/".encodeToByteArray()
  *
@@ -48,7 +48,7 @@ typealias LevelDBSchemaVersion = Int
  *     try {
  *       it.seek(prefix)
  *       db.withBatch(sync = true) {
- *         while (it.isValid()) {
+ *         while (it.isValid) {
  *           val k = it.key()
  *           if (!k.startsWith(prefix)) break
  *
@@ -75,7 +75,7 @@ typealias LevelDBSchemaVersion = Int
  *   override val to = 2
  *   override val name = "Build user_email_index"
  *
- *   override suspend fun migrate(db: LevelDBOps) {
+ *   override suspend fun migrate(db: LevelDB) {
  *     val userPrefix = "user:".encodeToByteArray()
  *     val indexPrefix = "user_email_index:".encodeToByteArray()
  *
@@ -83,7 +83,7 @@ typealias LevelDBSchemaVersion = Int
  *     try {
  *       it.seek(userPrefix)
  *       db.withBatch(sync = true) {
- *         while (it.isValid()) {
+ *         while (it.isValid) {
  *           val k = it.key()
  *           if (!k.startsWith(userPrefix)) break
  *
