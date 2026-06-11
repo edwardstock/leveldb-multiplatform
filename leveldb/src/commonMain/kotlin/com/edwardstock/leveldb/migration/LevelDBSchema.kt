@@ -87,18 +87,28 @@ data class LevelDBSchema(
         other as LevelDBSchema
 
         if (targetVersion != other.targetVersion) return false
+        if (revision != other.revision) return false
         if (migrations != other.migrations) return false
+        if (migrateAutomatically != other.migrateAutomatically) return false
+        if (safety != other.safety) return false
         if (!versionKey.contentEquals(other.versionKey)) return false
         if (!inProgressKey.contentEquals(other.inProgressKey)) return false
+        if (backupDirName != other.backupDirName) return false
+        if (stagingDirName != other.stagingDirName) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = targetVersion
+        result = 31 * result + revision
         result = 31 * result + migrations.hashCode()
+        result = 31 * result + migrateAutomatically.hashCode()
+        result = 31 * result + safety.hashCode()
         result = 31 * result + versionKey.contentHashCode()
         result = 31 * result + inProgressKey.contentHashCode()
+        result = 31 * result + backupDirName.hashCode()
+        result = 31 * result + stagingDirName.hashCode()
         return result
     }
 }

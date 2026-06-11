@@ -78,6 +78,8 @@ kotlin {
         namespace = group as String
         withSourcesJar(true)
 
+        withHostTest { }
+
         optimization {
             consumerKeepRules.apply {
                 publish = true
@@ -161,6 +163,20 @@ kotlin {
             }
         }
 
+        // The new `com.android.kotlin.multiplatform.library` plugin names the JVM unit-test
+        // source set `androidHostTest` (enabled above via `withHostTest`). `by getting` rather
+        // than an accessor so it resolves regardless of accessor regeneration on first sync.
+        val androidHostTest by getting {
+            dependsOn(jvmSharedTest)
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.test.junit)
+                implementation(libs.test.mockk.base)
+                implementation(libs.test.mockk.android)
+                implementation(libs.test.mockk.agent)
+            }
+        }
+
         jvmMain {
             dependencies {
                 implementation(libs.kotlin.coroutines.jvm)
@@ -233,6 +249,18 @@ tasks.withType<AbstractTestTask>().configureEach {
     reports.junitXml.required.set(false)
 }
 
+// `androidHostTest` inherits the common/jvmShared test sources, but those tests open a real
+// LevelDB and need the Android JNI .so, which cannot load on the host JVM. They already run on the
+// JVM and native targets — here we execute only the Android-specific tests (path/builder wiring).
+tasks.withType<Test>().configureEach {
+    if (name == "testAndroidHostTest") {
+        filter {
+            includeTestsMatching("com.edwardstock.leveldb.AndroidLevelDBInstanceTest")
+            isFailOnNoMatchingTests = false
+        }
+    }
+}
+
 kover {
     reports {
         filters {
@@ -243,6 +271,16 @@ kover {
                     "com.edwardstock.leveldb.test.*",
                     // Trivial exception types (message/cause plumbing, no real logic to cover).
                     "com.edwardstock.leveldb.exception.*",
+                    // Internal native-binding interface: its only "instructions" are the synthetic
+                    // $default argument bridges the compiler emits for methods with default params.
+                    // Callers go through LevelDBNativeProvider with explicit args, so the bridges are
+                    // never invoked — auto-generated noise, not a real coverage gap.
+                    "com.edwardstock.leveldb.internal.LevelDBNative",
+                    // No-op migration that only bumps the version. Its behavioural contract (version
+                    // jump + untouched data) is pinned by SoftMigrationTest, but the class body is a
+                    // data class (generated equals/hashCode/copy) + an empty migrate — generated
+                    // boilerplate, not logic worth counting.
+                    "com.edwardstock.leveldb.migration.SoftMigration",
                 )
             }
         }

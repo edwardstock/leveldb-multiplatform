@@ -64,4 +64,9 @@ dependencies {
     implementation(libs.di.hilt.navigationCompose)
     ksp(libs.di.hilt.compiler)
     ksp(libs.di.hilt.daggerCompiler)
+
+    // Hilt/Dagger 2.59.2 bundles a kotlin-metadata-jvm that only reads Kotlin metadata up to 2.3.0,
+    // but the Kotlin 2.4.0 compiler emits 2.4.0 metadata. Pin the parser to the compiler version so
+    // the Hilt annotation processor can read our classes. Remove once Hilt ships a 2.4.0-aware parser.
+    ksp(libs.kotlin.metadata.jvm)
 }

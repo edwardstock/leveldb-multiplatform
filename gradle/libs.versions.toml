@@ -29,8 +29,11 @@ espressoCore = "3.7.0"
 appcompat = "1.7.1"
 material = "1.14.0"
 
+test-mockk = "1.14.11"
+
 [libraries]
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlin-coroutines" }
 kotlin-coroutines-jvm = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version.ref = "kotlin-coroutines" }
@@ -81,6 +84,10 @@ test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ve
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
+test-mockk-base = { module = "io.mockk:mockk", version.ref = "test-mockk" }
+test-mockk-android = { module = "io.mockk:mockk-android", version.ref = "test-mockk" }
+test-mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "test-mockk" }
 
 
 [bundles]
