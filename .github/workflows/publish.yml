@@ -85,7 +85,7 @@ jobs:
               :leveldb:publishKotlinMultiplatformPublicationToMavenCentralRepository
               :leveldb:publishJvmPublicationToMavenCentralRepository
               :leveldb:publishAndroidPublicationToMavenCentralRepository
-              :leveldb-android-native:publishReleasePublicationToMavenCentralRepository
+              :leveldb-android-native:publishMavenPublicationToMavenCentralRepository
               :leveldb:publishLinuxX64PublicationToMavenCentralRepository
               :leveldb:publishMingwX64PublicationToMavenCentralRepository
               :leveldb:publishLinuxArm64PublicationToMavenCentralRepository
