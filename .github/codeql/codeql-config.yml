@@ -1,0 +1,16 @@
+name: LevelDB Multiplatform CodeQL Config
+
+paths-ignore:
+  - "**/.gradle/**"
+  - "**/build/**"
+  - "**/out/**"
+  - "**/bin/**"
+  - "**/.idea/**"
+  - "**/.kotlin/**"
+  - "**/node_modules/**"
+  - "android-example/**"
+  - "ios-example/**"
+  - "native/leveldb/**"
+  - "native/.dockcross*/**"
+  - "native/prebuilt/**"
+  - "third_party/**"

@@ -1,0 +1,5 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.LevelDB" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FFFCFAE5</item>
+    </style>
+</resources>

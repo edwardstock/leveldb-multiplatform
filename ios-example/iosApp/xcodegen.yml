@@ -1,0 +1,38 @@
+name: LevelDBExampleApp
+options:
+  deploymentTarget:
+    iOS: "13.0"
+settings:
+  GENERATE_INFOPLIST_FILE: NO
+targets:
+  LevelDBExampleApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.edwardstock.leveldb.iosExample
+      INFOPLIST_FILE: Sources/Info.plist
+      FRAMEWORK_SEARCH_PATHS:
+        - "$(SRCROOT)/../build/bin/iosSimulatorArm64/debugFramework"
+        - "$(SRCROOT)/../build/bin/iosArm64/debugFramework"
+      OTHER_LDFLAGS:
+        - "-framework"
+        - "LevelDBExample"
+    preBuildScripts:
+      - name: Build Kotlin Framework
+        script: |
+          set -euo pipefail
+          ROOT_DIR="${SRCROOT}/.."
+          GRADLEW="${ROOT_DIR}/../gradlew"
+          GRADLE_ARGS="-p ${ROOT_DIR}/.."
+          if [ "${PLATFORM_NAME}" = "iphonesimulator" ]; then
+            "${GRADLEW}" ${GRADLE_ARGS} :ios-example:linkDebugFrameworkIosSimulatorArm64
+            FRAMEWORK_DIR="${ROOT_DIR}/build/bin/iosSimulatorArm64/debugFramework"
+          else
+            "${GRADLEW}" ${GRADLE_ARGS} :ios-example:linkDebugFrameworkIosArm64
+            FRAMEWORK_DIR="${ROOT_DIR}/build/bin/iosArm64/debugFramework"
+          fi
+          mkdir -p "${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+          cp -R "${FRAMEWORK_DIR}/LevelDBExample.framework" "${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
+        shell: /bin/sh

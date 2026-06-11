@@ -1,14 +1,16 @@
 #!/bin/bash
+set -euo pipefail
 
-set -e
-set -x
+# path to the Kotlin-compiled .class output (so javac can resolve the types)
+# if you build with Gradle, it’s usually under build/classes/kotlin/jvmShared/main
+CLASSES_DIR=../../build/classes/kotlin/jvmShared/main
 
-JNI_PREBUILD_DIR=${PWD}
-JAVA_SOURCES_DIR=$JNI_PREBUILD_DIR/../java
+# where to dump generated headers
+HEADERS_OUT=${PWD}
 
-mkdir -p ${JAVA_SOURCES_DIR}
+# fully qualified name of your class that contains native declarations
+CLASS_NAME=com.edwardstock.leveldb.LevelDBNativeProvider
 
-NATIVE_SOURCES='com.github.hf.leveldb.implementation.NativeLevelDB com.github.hf.leveldb.implementation.NativeWriteBatch com.github.hf.leveldb.implementation.NativeIterator'
+mkdir -p "$HEADERS_OUT"
 
-JAVAH_BIN=$(which javah | tr -d "\n")
-${JAVAH_BIN} -d $JNI_PREBUILD_DIR -classpath $JAVA_SOURCES_DIR $NATIVE_SOURCES
+javac -h "$HEADERS_OUT" -classpath "$CLASSES_DIR" "$CLASSES_DIR/${CLASS_NAME//.//}.class"

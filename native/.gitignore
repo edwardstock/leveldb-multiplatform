@@ -1,0 +1,7 @@
+.dockcross-wrappers/
+.dockcross/
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+dockcross-*

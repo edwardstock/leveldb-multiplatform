@@ -16,7 +16,7 @@ _BUILD_DIR=${PWD}/.cxx
 CMAKE_BIN="${_ANDROID_HOME}/cmake/${_CMAKE_VERSION}/bin/cmake"
 if [ ! -f "${CMAKE_BIN}" ];
 then
-  echo "CMake didn't found in ${CMAKE_BIN}"
+  echo "CMake not found in ${CMAKE_BIN}"
   exit 1
 fi
 

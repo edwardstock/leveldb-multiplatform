@@ -1,0 +1,3 @@
+package = com.edwardstock.leveldb.interop
+headers = cleveldb.h
+staticLibraries = libcleveldb.a libleveldb.a

@@ -1,0 +1,63 @@
+name: CodeQL
+
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: c-cpp
+            build-mode: manual
+          #            kotlin 2.3 is not supported by CodeQL yet
+          #          - language: java-kotlin
+          #            build-mode: manual
+          - language: actions
+            build-mode: none
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup Java
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Build native C/C++ (for CodeQL)
+        if: matrix.language == 'c-cpp'
+        working-directory: native
+        run: |
+          cmake --preset linux-x86_64-debug
+          cmake --build --preset linux-x86_64-debug
+
+      - name: Build Java/Kotlin
+        if: matrix.language == 'java-kotlin'
+        run: |
+          ./gradlew :leveldb:check --no-daemon
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3

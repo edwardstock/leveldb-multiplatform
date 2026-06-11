@@ -1,53 +1,31 @@
-enableFeaturePreview("VERSION_CATALOGS")
+@file:Suppress("UnstableApiUsage")
 
-rootProject.name = "leveldb-multiplatform"
-
-
-include(
-    ":example",
-    ":leveldb-kt",
-    ":leveldb-android",
-//    ":mdnsjni"
-)
-
-project(":leveldb-kt").projectDir = file("leveldb_kt")
-project(":leveldb-android").projectDir = file("leveldb_android")
-// plugin for build cmake in gradle
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
-
     repositories {
-//        mavenLocal()
-        mavenCentral()
         google()
-        maven(url = uri("https://repo1.maven.org/maven2/"))
-        maven(url = uri("https://clojars.org/repo/"))
-        maven(url = uri("https://oss.sonatype.org/content/repositories/snapshots/"))
-        maven(url = uri("https://jitpack.io"))
-        maven(url = uri("https://oss.jfrog.org/libs-snapshot/"))
-        maven(url = uri("https://oss.jfrog.org/artifactory/oss-snapshot-local/"))
+        mavenCentral()
+        gradlePluginPortal()
+        mavenLocal()
+        maven {
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/") // Snapshot versions
+        }
     }
+}
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 dependencyResolutionManagement {
-
-
     repositories {
-        mavenLocal()
-        mavenCentral()
         google()
-        maven(url = uri("https://repo1.maven.org/maven2/"))
-        maven(url = uri("https://clojars.org/repo/"))
-        maven(url = uri("https://oss.sonatype.org/content/repositories/snapshots/"))
-        maven(url = uri("https://jitpack.io"))
-        maven(url = uri("https://oss.jfrog.org/libs-snapshot/"))
-        maven(url = uri("https://oss.jfrog.org/artifactory/oss-snapshot-local/"))
+        mavenCentral()
     }
-    versionCatalogs {
-        create("deps") {
-            from(files("gradle/deps.versions.toml"))
-        }
-    }
-
 }
 
+rootProject.name = "leveldb-multiplaform"
+include(":leveldb")
+include(":android-example")
+include(":leveldb-android-native")
+include(":ios-example")

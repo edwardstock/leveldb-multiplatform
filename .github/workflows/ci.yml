@@ -1,0 +1,74 @@
+name: PR Check
+permissions:
+  contents: read
+  pull-requests: write
+on:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            gradle_args: ":leveldb:check :leveldb:koverXmlReport"
+          - os: macos-latest
+            gradle_args: ":leveldb:check"
+          - os: windows-latest
+            gradle_args: ":leveldb:mingwX64Test"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Android tools
+        if: runner.os == 'Linux'
+        uses: ./.github/actions/setup-android-tools
+
+      - name: Cache Gradle wrapper
+        uses: ./.github/actions/cache-gradle-wrapper
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache konan
+        uses: ./.github/actions/cache-konan
+
+      - name: Run tests
+        env:
+          JAVA_TOOL_OPTIONS: "-XX:+CreateCoredumpOnCrash -XX:ErrorFile=leveldb/hs_err_pid%p.log"
+        run: ./gradlew ${{ matrix.gradle_args }}
+
+      - name: Post coverage to PR
+        if: matrix.os == 'ubuntu-22.04'
+        uses: mi-kas/kover-report@v1
+        with:
+          path: leveldb/build/reports/kover/report.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: Code coverage
+          update-comment: true
+
+      - name: Upload JVM crash logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jvm-crash-${{ matrix.os }}
+          path: |
+            leveldb/hs_err_pid*.log
+            leveldb/core*
