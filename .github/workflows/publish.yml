@@ -17,20 +17,26 @@ on:
         description: "Release version override (e.g. 2.0.1). Used only when snapshot = false"
         required: false
         type: string
-      full_tests:
-        description: "Run tests on all OS before publishing"
+      tests:
+        description: "Pre-publish tests: linux (default) | all (linux+macos) | skip"
         required: false
-        default: false
-        type: boolean
+        default: linux
+        type: choice
+        options:
+          - linux
+          - all
+          - skip
 
 jobs:
   test:
     name: Tests (${{ matrix.os }})
+    # Skip the whole gate when the dispatcher chose tests=skip (e.g. this ref already passed CI).
+    if: ${{ github.event.inputs.tests != 'skip' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON((github.event_name == 'workflow_dispatch' && github.event.inputs.full_tests == 'true') && '["ubuntu-22.04","macos-latest"]' || '["ubuntu-22.04"]') }}
+        os: ${{ fromJSON((github.event_name == 'workflow_dispatch' && github.event.inputs.tests == 'all') && '["ubuntu-22.04","macos-latest"]' || '["ubuntu-22.04"]') }}
 
     steps:
       - name: Checkout
@@ -65,6 +71,9 @@ jobs:
     name: Publish (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: test
+    # Run when tests passed OR were skipped (tests=skip), but never when they actually failed.
+    # Without always() a skipped 'test' would cascade-skip publish too.
+    if: ${{ always() && needs.test.result != 'failure' && needs.test.result != 'cancelled' }}
     environment: release
     strategy:
       fail-fast: false
