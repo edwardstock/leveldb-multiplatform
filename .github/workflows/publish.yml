@@ -89,6 +89,12 @@ jobs:
               :leveldb:publishIosSimulatorArm64PublicationToMavenCentralRepository
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
       - name: Verify publish secrets
         uses: ./.github/actions/check-publish-secrets
         with:
@@ -96,12 +102,6 @@ jobs:
           maven_password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: true
 
       - name: Install mingw-w64
         if: matrix.install_mingw
