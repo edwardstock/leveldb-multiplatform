@@ -1,0 +1,17 @@
+name: Cache Kotlin/Native (konan)
+description: >-
+  Cache the ~/.konan toolchain (Kotlin/Native compiler, LLVM, platform sysroots) so native jobs do
+  not re-download it from scratch on every run.
+runs:
+  using: composite
+  steps:
+    - name: Cache konan
+      uses: actions/cache@v4
+      with:
+        path: ~/.konan
+        # The konan toolchain version tracks the Kotlin version, which lives in libs.versions.toml.
+        key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+        # On a miss (e.g. Kotlin bumped) restore the previous konan and let it download only the
+        # delta, instead of pulling the whole toolchain again.
+        restore-keys: |
+          konan-${{ runner.os }}-

@@ -19,4 +19,4 @@ plugins {
 
 val libVersion = "2.0.0"
 group = "com.edwardstock.leveldb"
-version = providers.gradleProperty("version").orNull ?: libVersion
+version = if (providers.gradleProperty("snapshot").isPresent) "$libVersion-SNAPSHOT" else libVersion

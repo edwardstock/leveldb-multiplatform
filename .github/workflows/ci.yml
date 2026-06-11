@@ -47,6 +47,9 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Cache konan
+        uses: ./.github/actions/cache-konan
+
       - name: Run tests
         env:
           JAVA_TOOL_OPTIONS: "-XX:+CreateCoredumpOnCrash -XX:ErrorFile=leveldb/hs_err_pid%p.log"

@@ -301,7 +301,14 @@ mavenPublishing {
     // Use the new Central Portal (Publisher API)
     publishToMavenCentral(automaticRelease = false)
 
-    signAllPublications()
+    // Sign publications only when explicitly requested with -PsignPublications. CI passes it (the
+    // signing key arrives via the ORG_GRADLE_PROJECT_signingInMemoryKey secret), so Central releases
+    // are signed. Locally the flag is absent, so `publishToMavenLocal` works without a GPG keyring —
+    // handy for trying a snapshot in another project. Mirrors the -Psnapshot flag; gradleProperty is
+    // a configuration-cache-tracked input, so toggling it invalidates the cache correctly.
+    if (providers.gradleProperty("signPublications").isPresent) {
+        signAllPublications()
+    }
 
     pom {
         val thisPom = this

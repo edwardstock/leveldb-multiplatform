@@ -34,14 +34,23 @@ library.
 
 ## Installation
 
+> [!IMPORTANT]
+> `2.0.0` is not released yet. It's the in-progress multiplatform rewrite and exists only as a
+> snapshot for now — don't pin a release version until one ships. To try it, add the Central
+> snapshots repository and depend on `2.0.0-SNAPSHOT`:
+
 ```kotlin
+repositories {
+    maven("https://central.sonatype.com/repository/maven-snapshots/")
+}
+
 dependencies {
-    implementation("com.edwardstock.leveldb:leveldb:<version>")
+    implementation("com.edwardstock.leveldb:leveldb:2.0.0-SNAPSHOT")
 }
 ```
 
-Use the latest version from the release badge above. The native libraries load themselves on first
-use, so there is nothing else to wire up.
+Snapshots move — each publish overwrites the last, so re-resolve to pick up changes. The native
+libraries load themselves on first use, so there is nothing else to wire up.
 
 ## Quick start
 

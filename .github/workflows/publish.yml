@@ -8,9 +8,14 @@ on:
       - "*.*.*-*"
   workflow_dispatch:
     inputs:
+      snapshot:
+        description: "Publish a -SNAPSHOT from the selected ref (overwritable; ignores 'version')"
+        required: false
+        default: true
+        type: boolean
       version:
-        description: "Override Gradle project version (e.g. 2.0.1)"
-        required: true
+        description: "Release version override (e.g. 2.0.1). Used only when snapshot = false"
+        required: false
         type: string
       full_tests:
         description: "Run tests on all OS before publishing"
@@ -50,6 +55,9 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Cache konan
+        uses: ./.github/actions/cache-konan
+
       - name: Run tests
         run: ./gradlew :leveldb:check
 
@@ -57,6 +65,7 @@ jobs:
     name: Publish (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: test
+    environment: release
     strategy:
       fail-fast: false
       matrix:
@@ -111,6 +120,9 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Cache konan
+        uses: ./.github/actions/cache-konan
+
       - name: Publish
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -119,12 +131,17 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           VERSION_ARG=""
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            # workflow_dispatch: explicit override wins.
+          if [ "${{ github.event.inputs.snapshot }}" = "true" ]; then
+            # workflow_dispatch snapshot: the build derives <libVersion>-SNAPSHOT and vanniktech
+            # routes it to the Central snapshots repo. Overwritable, no staging/release step.
+            VERSION_ARG="-Psnapshot=true"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            # workflow_dispatch release: explicit version override wins.
             VERSION_ARG="-Pversion=${{ github.event.inputs.version }}"
           elif [ "${{ github.ref_type }}" = "tag" ]; then
             # tag push: the tag (e.g. 2.0.1) IS the version — otherwise the build falls back to the
             # hardcoded libVersion and would publish the wrong coordinates.
             VERSION_ARG="-Pversion=${{ github.ref_name }}"
           fi
-          ./gradlew ${VERSION_ARG} ${{ matrix.publish_tasks }}
+          # -PsignPublications: CI has the signing key (secrets above), so sign everything we push.
+          ./gradlew ${VERSION_ARG} -PsignPublications ${{ matrix.publish_tasks }}
